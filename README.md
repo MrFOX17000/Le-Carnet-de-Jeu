@@ -1,221 +1,228 @@
-# Carnet de Jeu
+# 🎲 Carnet de Jeu
 
 ![Symfony](https://img.shields.io/badge/Symfony-7-black)
 ![PHP](https://img.shields.io/badge/PHP-8.5-blue)
-![Tests](https://img.shields.io/badge/Tests-112-green)
-![License](https://img.shields.io/badge/License-Not%20specified-lightgrey)
+![Tests](https://img.shields.io/badge/Tests-112%20passed-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
-Application web Symfony pour gerer des groupes de joueurs, planifier des sessions et suivre des resultats (score simple ou match) avec isolation multi-tenant stricte.
+> Une application web pour gérer vos groupes de joueurs, suivre vos sessions de jeu et consolider vos statistiques — le tout avec une isolation multi-tenant rigoureuse.
 
-## TL;DR (recruteur)
-- C'est quoi: une app collaborative pour organiser des groupes de jeu, journaliser des sessions et consolider des stats fiables.
-- Probleme resolu: eviter les donnees melangees entre groupes et fiabiliser les stats avec des liaisons utilisateurs optionnelles.
-- Valeur tech: architecture en couches, handlers metier reutilises par UI web + API JSON, ACL strictes (`VIEW`/`MANAGE`) et validations cross-group.
+![Homepage](docs/images/homepage.PNG)
 
-## Contexte
-Projet personnel realise pour approfondir l'architecture Symfony moderne
-et demontrer la conception d'un backend multi-tenant securise avec API
-JSON et tests automatises.
+---
 
-## Pourquoi ce projet
-Carnet de Jeu centralise la vie d'un groupe de jeu:
-- creation de groupes et gestion des roles (`OWNER`, `MEMBER`)
-- creation d'activites et de sessions datees
-- saisie de resultats avec liaison optionnelle a des membres
-- partage public securise de session via token
-- dashboard personnel avec indicateurs utiles
+## 🚀 Démarrage rapide
 
-## Demo rapide
-- Dashboard: `/dashboard`
-- Groupes: `/groups`
-- API V1: `docs/api-v1.md`
-- Setup OAuth Google: `docs/OAuth-Google-Setup.md`
-- Seed dataset de demo: `php bin/console app:seed-demo`
-
-## Stack
-- Backend: PHP 8.5, Symfony 7
-- ORM/DB: Doctrine ORM, SQLite (dev/test)
-- Front: Twig, CSS, Stimulus
-- Tests: PHPUnit (tests web + applicatifs + API)
-- Auth: login classique + OAuth Google (optionnel)
-
-## Fonctionnalites cle
-- Authentification classique (email/mot de passe)
-- OAuth Google (optionnel)
-- ACL coherentes par groupe:
-  - `VIEW`: tous les membres
-  - `MANAGE`: owner uniquement
-- Entries prises en charge:
-  - `score_simple` avec participants et score
-  - `match` avec equipe domicile/exterieur
-- Fiabilisation des stats:
-  - liaison optionnelle `EntryScore.user`
-  - liaison optionnelle `EntryMatch.homeUser` et `EntryMatch.awayUser`
-  - validation stricte: utilisateur cible existant et membre du groupe
-- Reponses API JSON standardisees (`code`, `message`) pour les erreurs
-
-## Architecture
-Organisation en couches pour separer metier, orchestration et transport:
-- `src/Application`: commandes, requetes, handlers, result DTO
-- `src/Domain`: enums/types metier
-- `src/Entity`: modele Doctrine
-- `src/Infrastructure/Repository` + `src/Repository`: acces donnees
-- `src/UI/Http/Controller`: controles web + API
-
-Mini schema:
-```text
-UI (Twig / Controllers)
-  ↓
-Application (Commands / Queries / Handlers)
-  ↓
-Domain (Entities / Rules)
-  ↓
-Infrastructure (Doctrine / OAuth / Repositories)
-```
-
-Patterns utilises:
-- Command/Handler pour les actions d'ecriture
-- Query/Handler pour la lecture de dashboard
-- Reutilisation des handlers metier entre UI web et API
-
-## Securite et isolation
-- Verification explicite des droits via voter/policies
-- Validation cross-group systematique (anti resource forgery)
-- Un utilisateur ne peut pas:
-  - lire un groupe dont il n'est pas membre
-  - gerer des ressources sans role owner
-  - lier des utilisateurs externes au groupe dans les entries
-
-## API V1
-Documentation complete: `docs/api-v1.md`
-
-Exemples d'endpoints:
-- `GET /api/groups`
-- `POST /api/groups/{groupId}/activities`
-- `POST /api/groups/{groupId}/sessions`
-- `POST /api/groups/{groupId}/sessions/{sessionId}/entries/score-simple`
-- `POST /api/groups/{groupId}/sessions/{sessionId}/entries/match`
-
-## Installation locale
-Prerequis:
-- PHP 8.5+
-- Composer
-- Extension SQLite PDO (ou autre SGBD configure)
-
-Installation:
 ```bash
+# Installation
 composer install
 php bin/console doctrine:migrations:migrate --no-interaction
+
+# Données de démo (2 utilisateurs, 2 groupes, sessions pré-remplies)
 php bin/console app:seed-demo
+
+# Lancement
 symfony server:start
+# ou: php -S 127.0.0.1:8000 -t public
 ```
 
-Si vous n'utilisez pas Symfony CLI:
-```bash
-php -S 127.0.0.1:8000 -t public
-```
-
-## Seed de demonstration
-Commande principale:
-```bash
-php bin/console app:seed-demo
-```
-
-Le seed cree (de facon idempotente):
-- 2 utilisateurs de demo
-- 2 groupes
-- plusieurs activites
-- plusieurs sessions
-- des entries `score_simple` et `match`
-- une invitation en attente
-
-Comptes locaux crees:
+**Comptes de test** :
 - `demo@local.test` / `demo1234`
 - `demo.member@local.test` / `demo1234`
 
-## Parcours demo (entretien, 5-8 min)
-Ordre recommande:
-1. Homepage: positionnement produit + CTA.
-2. Login puis dashboard: vue globale (groupes, sessions recentes, stats).
-3. Groupe: navigation vers activites et sessions.
-4. Session: creation d'entries `score_simple` puis `match`.
-5. Profil membre: lecture des stats individuelles.
-6. Partage public: activation du lien `/s/{token}` en lecture seule.
-7. API JSON: montrer `GET /api/groups` puis un endpoint write.
-8. OAuth Google (si configure): login alternatif.
+---
 
-Commandes utiles juste avant la demo:
+## 📖 À propos du projet
+
+**Carnet de Jeu** centralise l'organisation de sessions de jeu en groupe : créez vos groupes, invitez des membres, planifiez des activités, enregistrez vos résultats (scores simples ou matchs) et consultez vos statistiques.
+
+### Cas d'usage typique
+1. Un groupe d'amis joue régulièrement à différents jeux
+2. Ils veulent suivre leurs sessions, leurs scores, et savoir qui gagne le plus
+3. Chaque groupe reste isolé — pas de fuite de données entre groupes
+4. Les stats individuelles sont fiables grâce aux liaisons utilisateur/score
+
+### Problème résolu
+**Isolation stricte** : un utilisateur peut être membre de plusieurs groupes, mais ne voit que les données des groupes auxquels il appartient. Les entrées de score peuvent être liées à un membre spécifique, garantissant des statistiques fiables.
+
+---
+
+## 🎯 Fonctionnalités principales
+
+✅ **Authentification flexible** : Login classique (email/password) + OAuth Google optionnel  
+✅ **Gestion de groupes** : Création, invitations, rôles (`OWNER`/`MEMBER`)  
+✅ **Activités & Sessions** : Planifiez vos rendez-vous de jeu avec date/heure  
+✅ **Entrées de résultats** :
+   - **Score simple** : participants + score  
+   - **Match** : équipe domicile vs extérieur avec liaison optionnelle aux membres  
+✅ **Partage public** : Générez un lien sécurisé avec token pour partager une session en lecture seule  
+✅ **API JSON v1** : Endpoints REST documentés (`/api/groups`, `/api/sessions`, etc.)  
+✅ **Tests automatisés** : 112 tests PHPUnit (355 assertions)
+
+---
+
+## 📸 Aperçu visuel
+
+### Dashboard personnel
+![Dashboard](docs/images/dashboard.PNG)
+
+### Vue groupe
+![Groupe](docs/images/group.PNG)
+
+### Détail session avec entrées
+![Session](docs/images/session.PNG)
+
+---
+
+## 🏗️ Architecture technique
+
+Organisation en couches pour séparer métier, orchestration et transport :
+
+```
+┌─────────────────────────────────────────┐
+│  UI Layer (Controllers + Twig)         │
+├─────────────────────────────────────────┤
+│  Application Layer (Commands/Queries)  │
+├─────────────────────────────────────────┤
+│  Domain Layer (Entities + Rules)       │
+├─────────────────────────────────────────┤
+│  Infrastructure (Doctrine + OAuth)     │
+└─────────────────────────────────────────┘
+```
+
+**Points techniques intéressants** :
+- **Handlers métier réutilisables** : les mêmes handlers sont appelés par les contrôleurs web ET l'API JSON
+- **Multi-tenant strict** : chaque requête vérifie l'appartenance au groupe via un `GroupVoter`
+- **ACL granulaires** : droits `VIEW` (tous les membres) et `MANAGE` (owner uniquement)
+- **Validation cross-group** : impossible de lier un utilisateur externe au groupe dans une entrée
+- **Seed idempotent** : `app:seed-demo` peut être relancé sans erreur
+
+### Stack technique
+- **Backend** : PHP 8.5 + Symfony 7
+- **ORM/DB** : Doctrine ORM + SQLite (dev/test)
+- **Frontend** : Twig + Stimulus + CSS
+- **Tests** : PHPUnit (functional + integration + API)
+- **Auth** : Symfony Security + KnpUOAuth2ClientBundle (Google)
+
+---
+
+## 📚 Documentation complète
+
+- **API REST v1** : [`docs/api-v1.md`](docs/api-v1.md)
+- **OAuth Google Setup** : [`docs/OAuth-Google-Setup.md`](docs/OAuth-Google-Setup.md)
+
+### Exemples d'endpoints API
+```http
+GET    /api/groups
+POST   /api/groups/{groupId}/activities
+POST   /api/groups/{groupId}/sessions
+POST   /api/groups/{groupId}/sessions/{sessionId}/entries/score-simple
+POST   /api/groups/{groupId}/sessions/{sessionId}/entries/match
+```
+
+Toutes les erreurs retournent un JSON standardisé :
+```json
+{
+  "code": "GROUP_NOT_FOUND",
+  "message": "Group not found or access denied"
+}
+```
+
+---
+
+## 🔒 Sécurité & Isolation
+
+- ✅ Vérification des droits via `Voter` Symfony
+- ✅ Validation stricte des ressources cross-group (anti resource forgery)
+- ✅ Un utilisateur **ne peut pas** :
+  - Lire un groupe dont il n'est pas membre
+  - Gérer des ressources sans être `OWNER`
+  - Lier des utilisateurs externes au groupe dans les entrées
+- ✅ Nouveau `APP_SECRET` généré (incident GitGuardian résolu — voir [`CLEANUP-REPORT.md`](CLEANUP-REPORT.md))
+
+---
+
+## 🧪 Tests
+
+```bash
+php bin/phpunit
+```
+
+**Couverture actuelle** : 112 tests | 355 assertions  
+- Tests fonctionnels (DbWebTestCase)
+- Tests de contrôleurs web
+- Tests API JSON
+- Tests de sécurité (accès, isolation)
+
+---
+
+## 🎬 Démo guidée (5-8 min)
+
+**Parcours recommandé pour une présentation** :
+
+1. **Homepage** → Positionnement produit + CTA
+2. **Login** (`demo@local.test` / `demo1234`) → Dashboard
+3. **Dashboard** → Vue globale (groupes, sessions récentes, stats)
+4. **Groupe** → Naviguer vers activités et sessions
+5. **Session** → Créer des entrées (`score_simple` puis `match`)
+6. **Profil membre** → Consulter les stats individuelles
+7. **Partage public** → Activer le lien `/s/{token}` en lecture seule
+8. **API JSON** → `GET /api/groups` + un endpoint write
+
+**Commandes utiles avant démo** :
 ```bash
 php bin/console app:seed-demo
-php bin/phpunit
+php bin/phpunit --testdox
 ```
 
-## Variables d'environnement
-Fichier principal: `.env` (et `.env.local` en local)
+---
 
-Variables frequentes:
-- `APP_ENV`
-- `APP_SECRET`
-- `DATABASE_URL`
-- `MAILER_DSN`
-- `GOOGLE_CLIENT_ID` (si OAuth actif)
-- `GOOGLE_CLIENT_SECRET` (si OAuth actif)
+## ⚙️ Configuration
 
-Bonnes pratiques:
-- garder les secrets dans `.env.local` (jamais commits)
-- utiliser une base locale dediee (SQLite ou DB de dev isolee)
-- verifier que la doc d'installation fonctionne sur un clone neuf
+### Variables d'environnement
+Fichier principal : `.env` (overridé par `.env.local` en local)
 
-Voir aussi: `docs/OAuth-Google-Setup.md`
+| Variable | Description | Obligatoire |
+|----------|-------------|-------------|
+| `APP_ENV` | Environnement (`dev`, `prod`) | Oui |
+| `APP_SECRET` | Secret Symfony (64 caractères hex) | Oui |
+| `DATABASE_URL` | DSN de la base de données | Oui |
+| `MAILER_DSN` | DSN du mailer Symfony | Non |
+| `GOOGLE_CLIENT_ID` | Client ID OAuth Google | Si OAuth actif |
+| `GOOGLE_CLIENT_SECRET` | Secret OAuth Google | Si OAuth actif |
 
-## Tests
-Lancer toute la suite:
-```bash
-php bin/phpunit
-```
+**Bonnes pratiques** :
+- Gardez les secrets dans `.env.local` (jamais commité)
+- Utilisez une base SQLite dédiée pour le dev
+- Vérifiez l'installation sur un clone neuf avant de partager
 
-Etat actuel de reference:
-- `112 tests`
-- `355 assertions`
+---
 
-## Checklist release locale
-- page d'accueil propre et lisible sans erreur visuelle
-- navigation complete sans impasse (retours dashboard/groupe/session)
-- seed demo execute et verifie (`app:seed-demo`)
-- compte demo classique fonctionnel
-- compte demo Google configure si OAuth disponible
-- README relu en mode recruteur (contexte, valeur, setup, demo)
-- variables d'environnement nettoyees (`.env`/`.env.local`)
-- installation testee de zero (nouveau clone + migrations + seed + login)
+## 📦 Checklist avant release
 
-## Captures ecran (portfolio)
-Ajoutez vos visuels dans `docs/images/` puis referencez-les ici.
+- [ ] Page d'accueil lisible sans erreur visuelle
+- [ ] Navigation complète sans impasse (retours dashboard/groupe/session)
+- [ ] Seed demo exécuté et vérifié (`app:seed-demo`)
+- [ ] Compte demo classique fonctionnel
+- [ ] README relu en mode recruteur
+- [ ] Variables d'environnement nettoyées (`.env`/`.env.local`)
+- [ ] Installation testée de zéro (clone → migrations → seed → login)
+- [ ] Tests passent : `php bin/phpunit`
 
-Visuels recommandes:
-- homepage: `docs/images/homepage.png`
-- dashboard: `docs/images/dashboard.png`
-- groupe: `docs/images/group.png`
-- session: `docs/images/session.png`
-- API docs (optionnel): `docs/images/api-docs.png`
+---
 
-Exemple d'integration:
-```md
-![Homepage](docs/images/homepage.png)
-![Dashboard](docs/images/dashboard.png)
-![Groupe](docs/images/group.png)
-![Session](docs/images/session.png)
-```
+## 🚀 Roadmap
 
-## Points techniquement interessants
-- Isolation multi-tenant stricte (controles d'appartenance groupe sur chaque action critique).
-- ACL explicites via voter (`GroupVoter`) et roles de membership.
-- Handlers metier uniques appeles par web controllers et API controllers.
-- Reponses API d'erreur homogenes (`code` + `message`).
-- Seed de demo idempotent pour onboard rapide et presentation stable.
+- [ ] OpenAPI/Swagger automatique
+- [ ] Pagination API
+- [ ] Filtres et tris avancés
+- [ ] Exports CSV/JSON des sessions
+- [ ] Statistiques avancées par membre et activité
+- [ ] Refonte UI avec framework moderne
 
-## Feuille de route
-- OpenAPI/Swagger
-- Pagination API
-- Filtres et tris avances
-- Exports CSV/JSON des sessions
-- Statistiques avancees par membre et activite
+---
+
+## 📄 Licence
+
+Ce projet est sous licence MIT.
+
