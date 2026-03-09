@@ -1,0 +1,160 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-8">Mon Dashboard</h1>
+
+    {% if memberStats is not empty or activityStats is not empty or dashboardStats is not empty %}
+        <div class="mb-10">
+            <h2 class="text-xl font-bold mb-4">📊 Stats rapides</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {% if memberStats is not empty %}
+                    <div class="border rounded-lg p-4 bg-white">
+                        <h3 class="font-semibold text-lg mb-2">Stats membre ({{ memberStats.groupName }})</h3>
+                        <ul class="space-y-1 text-sm text-gray-700">
+                            <li>Sessions: <strong>{{ memberStats.sessionsCount }}</strong></li>
+                            <li>Entries: <strong>{{ memberStats.entriesCount }}</strong></li>
+                            <li>Points cumulés: <strong>{{ memberStats.totalPoints|number_format(0, ',', ' ') }}</strong></li>
+                            <li>Matchs joués: <strong>{{ memberStats.matchesPlayed }}</strong></li>
+                            <li>Victoires / Défaites: <strong>{{ memberStats.wins }} / {{ memberStats.losses }}</strong></li>
+                        </ul>
+                        <p class="text-xs text-gray-500 mt-3">Base sur les participants lies aux entries (fallback sur le createur si non renseigne).</p>
+                    </div>
+                {% endif %}
+
+                {% if activityStats is not empty %}
+                    <div class="border rounded-lg p-4 bg-white">
+                        <h3 class="font-semibold text-lg mb-2">Stats activité</h3>
+                        <p class="text-sm text-gray-700">Activité la plus jouée: <strong>{{ activityStats.activityName }}</strong></p>
+                        <p class="text-sm text-gray-700">Sessions: <strong>{{ activityStats.sessionsCount }}</strong></p>
+                        <p class="text-sm text-gray-700">Dernière session: <strong>{{ activityStats.lastPlayedAt|date('d M Y à H:i', 'Europe/Paris') }}</strong></p>
+
+                        {% if activityStats.topParticipants is not empty %}
+                            <div class="mt-3">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Participants fréquents</p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    {% for participant in activityStats.topParticipants %}
+                                        <li>{{ participant.name }} <span class="text-gray-500">({{ participant.count }})</span></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if dashboardStats is not empty %}
+                    <div class="border rounded-lg p-4 bg-white">
+                        <h3 class="font-semibold text-lg mb-2">Dashboard enrichi</h3>
+                        <ul class="space-y-1 text-sm text-gray-700">
+                            <li>Sessions cette semaine: <strong>{{ dashboardStats.sessionsThisWeek }}</strong></li>
+                            <li>Activité la plus jouée: <strong>{{ dashboardStats.mostPlayedActivityName ?? 'N/A' }}</strong>{% if (dashboardStats.mostPlayedActivitySessions ?? 0) > 0 %} ({{ dashboardStats.mostPlayedActivitySessions }}){% endif %}</li>
+                            <li>Groupe le plus actif: <strong>{{ dashboardStats.mostActiveGroupName ?? 'N/A' }}</strong>{% if (dashboardStats.mostActiveGroupSessions ?? 0) > 0 %} ({{ dashboardStats.mostActiveGroupSessions }}){% endif %}</li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if groups is empty and recentSessions is empty and pendingInvites is empty %}
+        <div class="text-gray-500 text-center py-12">
+            <p>Bienvenue ! Crée ou rejoins un groupe pour commencer.</p>
+        </div>
+    {% else %}
+
+        {# Bloc 1 : Mes groupes #}
+        {% if groups is not empty %}
+        <div class="mb-10">
+            <h2 class="text-xl font-bold mb-4">📋 Mes groupes</h2>
+            <div class="grid gap-4">
+                {% for group in groups %}
+                    <div class="border rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold text-lg">
+                                    <a href="{{ path('group_show', {id: group.id}) }}" class="text-blue-600 hover:underline">
+                                        {{ group.name }}
+                                    </a>
+                                </h3>
+                                <p class="text-sm text-gray-600">
+                                    Rôle : <span class="font-semibold">{{ (groupRoles[group.id] ?? 'UNKNOWN')|upper }}</span>
+                                </p>
+                            </div>
+                            <a href="{{ path('group_show', {id: group.id}) }}" class="text-blue-600 hover:underline">
+                                Voir →
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Bloc 2 : Sessions récentes #}
+        {% if recentSessions is not empty %}
+        <div class="mb-10">
+            <h2 class="text-xl font-bold mb-4">⏱️ Sessions récentes</h2>
+            <div class="space-y-3">
+                {% for session in recentSessions %}
+                    <div class="border rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-semibold">
+                                    <a href="{{ path('session_show', {groupId: session.group.id, sessionId: session.id}) }}" class="text-blue-600 hover:underline">
+                                        {{ session.title ?? session.activity.name }}
+                                    </a>
+                                </h3>
+                                <p class="text-sm text-gray-600">
+                                    <span class="font-semibold">{{ session.group.name }}</span>
+                                    {% if session.activity %}
+                                        · {{ session.activity.name }}
+                                    {% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    📅 {{ session.playedAt|date('d M Y à H:i', 'Europe/Paris') }}
+                                </p>
+                            </div>
+                            <a href="{{ path('session_show', {groupId: session.group.id, sessionId: session.id}) }}" class="text-blue-600 hover:underline">
+                                Ouvrir →
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Bloc 3 : Invitations reçues #}
+        {% if pendingInvites is not empty %}
+        <div class="mb-10">
+            <h2 class="text-xl font-bold mb-4">✉️ Invitations reçues</h2>
+            <div class="space-y-3">
+                {% for invite in pendingInvites %}
+                    <div class="border border-orange-200 bg-orange-50 rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-orange-900">
+                                    Tu es invité à rejoindre <strong>{{ invite.group.name }}</strong>
+                                </h3>
+                                <p class="text-sm text-orange-700 mt-1">
+                                    Rôle proposé : <span class="font-semibold">{{ invite.role.value|upper }}</span>
+                                </p>
+                                <p class="text-xs text-orange-600 mt-2">
+                                    Valable jusqu'au {{ invite.expiresAt|date('d M Y', 'Europe/Paris') }}
+                                </p>
+                            </div>
+                            <a href="{{ path('invite_accept', {token: invite.token}) }}" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-semibold text-sm transition">
+                                Accepter
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

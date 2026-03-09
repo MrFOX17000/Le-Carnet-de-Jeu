@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une activité - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <h1>Créer une activité</h1>
+
+  <p>Groupe : <strong>{{ group.name }}</strong></p>
+
+  {% for message in app.flashes('error') %}
+    <div class="alert alert-danger">
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  <form method="post">
+    <div>
+      <label for="name">Nom de l'activité</label>
+      <input type="text" id="name" name="name" required placeholder="Ex: Rocket League, Skyjo, Échecs...">
+    </div>
+
+    <button type="submit">Créer l'activité</button>
+  </form>
+
+  <p>
+    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
+  </p>
+{% endblock %}

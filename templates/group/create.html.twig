@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Creer un groupe{% endblock %}
+
+{% block body %}
+<section class="panel narrow">
+  <h1>Creer un groupe</h1>
+
+  {% if error is defined and error %}
+    <div class="flash flash-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post">
+    <label for="name">Nom du groupe</label>
+    <input id="name" name="name" required maxlength="120" value="{{ name|default('') }}" placeholder="Ex: Soiree jeux du vendredi">
+
+    <button type="submit" class="btn btn-primary">Creer</button>
+  </form>
+</section>
+{% endblock %}

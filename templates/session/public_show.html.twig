@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partage - Session{% endblock %}
+
+{% block body %}
+  <div class="public-shared-session">
+    <h1>
+      {% if session.title %}
+        {{ session.title }}
+      {% else %}
+        Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+      {% endif %}
+    </h1>
+
+    <dl>
+      <dt>Activité</dt>
+      <dd>{{ session.activity.name }}</dd>
+
+      <dt>Date jouée</dt>
+      <dd>{{ session.playedAt|date('d/m/Y H:i') }}</dd>
+
+      <dt>Créée le</dt>
+      <dd>{{ session.createdAt|date('d/m/Y H:i') }}</dd>
+
+      <dt>Créée par</dt>
+      <dd>{{ session.createdBy.email }}</dd>
+    </dl>
+
+    <h2>Entrées</h2>
+
+    {% if session.entries|length == 0 %}
+      <p>Aucune entry pour cette session.</p>
+    {% else %}
+      <ul>
+        {% for entry in session.entries %}
+          <li>
+            <p>
+              <strong>{{ entry.type.value }}</strong>
+              {% if entry.label %}
+                - {{ entry.label }}
+              {% endif %}
+              ({{ entry.createdAt|date('d/m/Y H:i') }})
+            </p>
+
+            {% if entry.type.value == 'match' and entry.entryMatch %}
+              <p>
+                {{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}
+              </p>
+            {% elseif entry.scores|length > 0 %}
+              <ul>
+                {% for score in entry.scores %}
+                  <li>{{ score.participantName }}: {{ score.score }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <p class="text-muted">
+      <small>Lecture seule - Session partagée en accès direct</small>
+    </p>
+  </div>
+{% endblock %}

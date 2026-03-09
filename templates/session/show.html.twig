@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Session - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <h1>
+    {% if session.title %}
+      {{ session.title }}
+    {% else %}
+      Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+    {% endif %}
+  </h1>
+
+  <dl>
+    <dt>Groupe</dt>
+    <dd>{{ group.name }}</dd>
+
+    <dt>Activité</dt>
+    <dd>{{ session.activity.name }}</dd>
+
+    <dt>Titre</dt>
+    <dd>
+      {% if session.title %}
+        {{ session.title }}
+      {% else %}
+        Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+      {% endif %}
+    </dd>
+
+    <dt>Date jouée</dt>
+    <dd>{{ session.playedAt|date('d/m/Y H:i') }}</dd>
+
+    <dt>Créée le</dt>
+    <dd>{{ session.createdAt|date('d/m/Y H:i') }}</dd>
+
+    <dt>Créée par</dt>
+    <dd>{{ session.createdBy.email }}</dd>
+  </dl>
+
+  <h2>Partage</h2>
+
+  {% if session.unlistedToken %}
+    <div class="share-section">
+      <p>
+        <strong>Lien de partage :</strong>
+      </p>
+      <input type="text" id="share-link" value="{{ absolute_url(path('public_shared_session', { token: session.unlistedToken })) }}" readonly>
+      <button onclick="copyToClipboard()">Copier le lien</button>
+    </div>
+  {% else %}
+    <form method="POST" action="{{ path('session_enable_share', { groupId: group.id, sessionId: session.id }) }}">
+      <button type="submit">Activer le partage en lecture seule</button>
+    </form>
+  {% endif %}
+
+  <h2>Entries</h2>
+
+  <p>
+    <a href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter un score simple</a>
+    |
+    <a href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
+  </p>
+
+  {% if session.entries|length == 0 %}
+    <p>Aucune entry pour cette session.</p>
+  {% else %}
+    <ul>
+      {% for entry in session.entries %}
+        <li>
+          <p>
+            <strong>{{ entry.type.value }}</strong>
+            {% if entry.label %}
+              - {{ entry.label }}
+            {% endif %}
+            ({{ entry.createdAt|date('d/m/Y H:i') }})
+          </p>
+
+          {% if entry.type.value == 'match' and entry.entryMatch %}
+            <p>
+              {{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}
+            </p>
+          {% elseif entry.scores|length > 0 %}
+            <ul>
+              {% for score in entry.scores %}
+                <li>{{ score.participantName }}: {{ score.score }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <p>
+            <a href="{{ path('entry_show', { groupId: group.id, sessionId: session.id, entryId: entry.id }) }}">Voir le détail</a>
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <p>
+    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités du groupe</a>
+  </p>
+
+  <script>
+    function copyToClipboard() {
+      const link = document.getElementById('share-link');
+      link.select();
+      document.execCommand('copy');
+      alert('Lien copié dans le presse-papiers !');
+    }
+  </script>
+{% endblock %}

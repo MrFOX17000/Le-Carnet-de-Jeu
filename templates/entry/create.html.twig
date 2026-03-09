@@ -1,0 +1,87 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Créer une entrée - {{ activity.name }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Nouvelle entrée pour {{ activity.name }}</h1>
+    <p class="text-muted">Session du {{ session.playedAt|date('d/m/Y H:i') }}</p>
+
+    <form method="POST" class="mt-4">
+        <div class="mb-3">
+            <label for="label" class="form-label">Titre de l'entrée (optionnel)</label>
+            <input type="text" class="form-control" id="label" name="label" placeholder="Ex: Manche 1, Finale, etc.">
+        </div>
+
+        <div class="mb-4">
+            <h5>Scores</h5>
+            <div id="scores-container">
+                <div class="score-row input-group mb-2">
+                    <input type="text" class="form-control" name="participant_names[]" placeholder="Nom du participant">
+                    <input type="number" step="0.01" class="form-control" name="scores[]" placeholder="Score">
+                    <select class="form-control" name="participant_user_ids[]">
+                        <option value="">Membre lie (optionnel)</option>
+                        {% for membership in groupMembers %}
+                            <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger remove-score" style="display: none;">Supprimer</button>
+                </div>
+                <div class="score-row input-group mb-2">
+                    <input type="text" class="form-control" name="participant_names[]" placeholder="Nom du participant">
+                    <input type="number" step="0.01" class="form-control" name="scores[]" placeholder="Score">
+                    <select class="form-control" name="participant_user_ids[]">
+                        <option value="">Membre lie (optionnel)</option>
+                        {% for membership in groupMembers %}
+                            <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger remove-score" style="display: none;">Supprimer</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="add-score">+ Ajouter un score</button>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Créer l'entrée</button>
+            <a href="{{ path('session_show', {'groupId': group.id, 'sessionId': session.id}) }}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('add-score').addEventListener('click', function() {
+    const container = document.getElementById('scores-container');
+    const row = document.createElement('div');
+    row.className = 'score-row input-group mb-2';
+    row.innerHTML = `
+        <input type="text" class="form-control" name="participant_names[]" placeholder="Nom du participant">
+        <input type="number" step="0.01" class="form-control" name="scores[]" placeholder="Score">
+        <select class="form-control" name="participant_user_ids[]">
+            <option value="">Membre lie (optionnel)</option>
+            {% for membership in groupMembers %}
+                <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn btn-outline-danger remove-score">Supprimer</button>
+    `;
+    container.appendChild(row);
+    updateRemoveButtons();
+});
+
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.score-row');
+    rows.forEach((row, idx) => {
+        const btn = row.querySelector('.remove-score');
+        if (rows.length > 1) {
+            btn.style.display = 'block';
+            btn.onclick = function() { row.remove(); updateRemoveButtons(); };
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+}
+
+updateRemoveButtons();
+</script>
+{% endblock %}

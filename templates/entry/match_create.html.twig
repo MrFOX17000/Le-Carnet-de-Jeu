@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une entry match - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <h1>Nouvelle entry match</h1>
+
+  <p>Groupe : <strong>{{ group.name }}</strong></p>
+  <p>Session : <strong>{{ session.title ?: session.activity.name }}</strong></p>
+
+  {% for message in app.flashes('error') %}
+    <div class="alert alert-danger">{{ message }}</div>
+  {% endfor %}
+
+  <form method="post">
+    <div>
+      <label for="label">Label (optionnel)</label>
+      <input type="text" id="label" name="label" placeholder="Ex: Quart de finale">
+    </div>
+
+    <div>
+      <label for="homeName">Equipe domicile</label>
+      <input type="text" id="homeName" name="homeName" required>
+    </div>
+
+    <div>
+      <label for="homeUserId">Membre domicile (optionnel)</label>
+      <select id="homeUserId" name="homeUserId">
+        <option value="">-- Aucun --</option>
+        {% for membership in groupMembers %}
+          <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="awayName">Equipe exterieur</label>
+      <input type="text" id="awayName" name="awayName" required>
+    </div>
+
+    <div>
+      <label for="awayUserId">Membre exterieur (optionnel)</label>
+      <select id="awayUserId" name="awayUserId">
+        <option value="">-- Aucun --</option>
+        {% for membership in groupMembers %}
+          <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="homeScore">Score domicile</label>
+      <input type="number" id="homeScore" name="homeScore" min="0" step="1" required>
+    </div>
+
+    <div>
+      <label for="awayScore">Score exterieur</label>
+      <input type="number" id="awayScore" name="awayScore" min="0" step="1" required>
+    </div>
+
+    <button type="submit">Créer l'entry match</button>
+  </form>
+
+  <p>
+    <a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">Retour à la session</a>
+  </p>
+{% endblock %}

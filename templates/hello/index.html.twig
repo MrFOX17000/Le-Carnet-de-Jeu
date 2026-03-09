@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carnet de Jeu{% endblock %}
+
+{% block body %}
+<section class="hero">
+	<p class="eyebrow">Plateforme collaborative de suivi de sessions</p>
+	<h1>Carnet de Jeu, pret pour une demo locale</h1>
+	<p>
+		Organisez vos groupes, creez des sessions, enregistrez des resultats score et match,
+		puis consultez des stats fiables avec isolation multi-tenant stricte.
+	</p>
+	<p>
+		Pour une mise en route rapide: lancez <code>php bin/console app:seed-demo</code>
+		puis connectez-vous avec <code>demo@local.test</code> / <code>demo1234</code>.
+	</p>
+
+	<div class="hero-actions">
+		{% if app.user %}
+			<a class="btn btn-primary" href="{{ path('dashboard') }}">Ouvrir le dashboard</a>
+			<a class="btn btn-secondary" href="{{ path('group_index') }}">Voir mes groupes</a>
+		{% else %}
+			<a class="btn btn-primary" href="{{ path('app_register') }}">Commencer gratuitement</a>
+			<a class="btn btn-secondary" href="{{ path('app_login') }}">Se connecter</a>
+		{% endif %}
+	</div>
+</section>
+
+<section class="feature-grid">
+	<article class="panel">
+		<h2>Groupes et roles</h2>
+		<p>Gestion claire des droits owner/member pour proteger les actions sensibles.</p>
+	</article>
+	<article class="panel">
+		<h2>Entries score + match</h2>
+		<p>Resultats structurables avec liaison optionnelle des participants pour des stats exactes.</p>
+	</article>
+	<article class="panel">
+		<h2>API V1 + web UI</h2>
+		<p>Meme logique metier partagee entre controllers web et endpoints JSON.</p>
+	</article>
+	<article class="panel">
+		<h2>Demo recruteur rapide</h2>
+		<p>Dataset de demonstration disponible via <code>app:seed-demo</code> pour montrer le produit en 2 minutes.</p>
+	</article>
+</section>
+{% endblock %}

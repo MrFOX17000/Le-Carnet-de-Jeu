@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes groupes{% endblock %}
+
+{% block body %}
+<section>
+  <div class="page-title-row">
+    <h1>Mes groupes</h1>
+    <a class="btn btn-secondary" href="{{ path('group_create_form') }}">Nouveau groupe</a>
+  </div>
+
+  {% if memberships is empty %}
+    <div class="panel narrow">
+      <p>Aucun groupe pour le moment. Creez votre premier groupe pour demarrer.</p>
+    </div>
+  {% else %}
+    <div class="card-list">
+      {% for membership in memberships %}
+        <article class="panel">
+          <h2>
+            <a href="{{ path('group_show', {id: membership.group.id}) }}">{{ membership.group.name }}</a>
+          </h2>
+          <p>Role: <strong>{{ membership.role.value|upper }}</strong></p>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

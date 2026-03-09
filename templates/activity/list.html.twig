@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activités - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <h1>Activités du groupe "{{ group.name }}"</h1>
+
+  {% for message in app.flashes('success') %}
+    <div class="alert alert-success">
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  {% if activities|length > 0 %}
+    <ul>
+      {% for activity in activities %}
+        <li>
+          <strong>{{ activity.name }}</strong>
+          <small>(créée le {{ activity.createdAt|date('d/m/Y H:i') }})</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune activité pour le moment.</p>
+  {% endif %}
+
+  <p>
+    <a href="{{ path('activity_create', { id: group.id }) }}">+ Créer une activité</a>
+  </p>
+
+  <p>
+    <a href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+  </p>
+{% endblock %}

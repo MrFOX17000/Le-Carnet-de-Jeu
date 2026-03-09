@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accepter une invitation{% endblock %}
+
+{% block body %}
+  <h1>Accepter une invitation</h1>
+
+  {% for message in app.flashes('error') %}
+    <div class="alert alert-danger">
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  <div class="invitation-details">
+    <p>Vous avez été invité à rejoindre le groupe :</p>
+    <h2>{{ invite.group.name }}</h2>
+
+    <dl>
+      <dt>Rôle</dt>
+      <dd>{{ invite.role.value }}</dd>
+
+      <dt>Invitation créée par</dt>
+      <dd>{{ invite.createdBy.email }}</dd>
+
+      <dt>Expire le</dt>
+      <dd>{{ invite.expiresAt|date('d/m/Y H:i') }}</dd>
+    </dl>
+  </div>
+
+  <form method="post">
+    <button type="submit" name="accept" value="yes">Accepter l'invitation</button>
+    <a href="{{ path('group_index') }}">Annuler</a>
+  </form>
+{% endblock %}

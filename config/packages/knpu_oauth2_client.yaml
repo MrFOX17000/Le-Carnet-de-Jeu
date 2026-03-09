@@ -1,0 +1,15 @@
+knpu_oauth2_client:
+    clients:
+        google:
+            # Must be "google" - it activates that provider
+            type: google
+            # Configure your credentials at https://console.cloud.google.com/
+            client_id: '%env(GOOGLE_CLIENT_ID)%'
+            client_secret: '%env(GOOGLE_CLIENT_SECRET)%'
+            
+            # Where to redirect back! Must match your Google app settings
+            redirect_route: connect_google_check
+            redirect_params: {}
+            
+            # Optional scopes you might want to request, but defaults are usually fine
+            # scope: ['openid', 'email', 'profile']

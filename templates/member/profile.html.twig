@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil - {{ member.email }} - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <div class="member-profile">
+    <h1>{{ member.email }}</h1>
+    <p><strong>Groupe :</strong> {{ group.name }}</p>
+
+    <h2>Statistiques</h2>
+    <dl>
+      <dt>Sessions jouées</dt>
+      <dd>{{ stats.total_sessions }}</dd>
+
+      <dt>Entrées de score</dt>
+      <dd>{{ stats.total_score_entries }}</dd>
+
+      <dt>Entrées de match</dt>
+      <dd>{{ stats.total_match_entries }}</dd>
+
+      <dt>Total des points (scores)</dt>
+      <dd>{{ stats.total_scores }}</dd>
+    </dl>
+
+    <h2>Historique des sessions</h2>
+
+    {% if sessions|length == 0 %}
+      <p><em>Aucune participation enregistrée.</em></p>
+    {% else %}
+      <ul class="sessions-timeline">
+        {% for session in sessions %}
+          <li>
+            <div class="session-header">
+              <h3>
+                {% if session.title %}
+                  {{ session.title }}
+                {% else %}
+                  Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+                {% endif %}
+              </h3>
+              <p class="session-meta">
+                <strong>{{ session.activity.name }}</strong> — {{ session.playedAt|date('d/m/Y H:i') }}
+              </p>
+            </div>
+
+            <div class="session-entries">
+              <h4>Participations :</h4>
+              <ul>
+                {% for entry in session.entries %}
+                  {% if entry.type.value == 'score_simple' %}
+                    {% for score in entry.scores %}
+                      {% if score.user and score.user.id == member.id %}
+                        <li>
+                          <strong>Score :</strong>
+                          {% if entry.label %}
+                            {{ entry.label }} —
+                          {% endif %}
+                          <strong>{{ score.score }}</strong> points
+                        </li>
+                      {% endif %}
+                    {% endfor %}
+                  {% elseif entry.type.value == 'match' and entry.entryMatch %}
+                    {% set match = entry.entryMatch %}
+                    {% if (match.homeUser and match.homeUser.id == member.id) or (match.awayUser and match.awayUser.id == member.id) %}
+                      <li>
+                        <strong>Match :</strong>
+                        {% if entry.label %}
+                          {{ entry.label }} —
+                        {% endif %}
+                        {% if match.homeUser and match.homeUser.id == member.id %}
+                          <strong>{{ match.homeName }}</strong> vs {{ match.awayName }}
+                          ({{ match.homeScore }} - {{ match.awayScore }})
+                        {% elseif match.awayUser and match.awayUser.id == member.id %}
+                          {{ match.homeName }} vs <strong>{{ match.awayName }}</strong>
+                          ({{ match.homeScore }} - {{ match.awayScore }})
+                        {% endif %}
+                      </li>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+
+            <p>
+              <a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
+                Voir la session complète
+              </a>
+            </p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <p>
+      <a href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+    </p>
+  </div>
+{% endblock %}

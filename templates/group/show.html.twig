@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block body %}
+	<h1>{{ group.name }}</h1>
+
+	<dl>
+		<dt>ID</dt>
+		<dd>{{ group.id }}</dd>
+
+		<dt>Cree le</dt>
+		<dd>{{ group.createdAt ? group.createdAt|date('d/m/Y H:i') : '-' }}</dd>
+
+		<dt>Cree par</dt>
+		<dd>{{ group.createdBy ? group.createdBy.email : '-' }}</dd>
+
+		<dt>Nombre de membres</dt>
+		<dd>{{ group.groupMembers|length }}</dd>
+	</dl>
+
+	<h2>Timeline des sessions</h2>
+
+	{% if sessions is empty %}
+		<p>Aucune session pour ce groupe.</p>
+	{% else %}
+		<ul>
+			{% for session in sessions %}
+				<li>
+					<p>
+						<a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
+							{% if session.title %}
+								{{ session.title }}
+							{% else %}
+								Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+							{% endif %}
+						</a>
+					</p>
+					<ul>
+						<li>Activité: {{ session.activity.name }}</li>
+						<li>Date jouée: {{ session.playedAt|date('d/m/Y H:i') }}</li>
+						<li>Entries: {{ session.entries|length }}</li>
+					</ul>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+
+	<p>
+		<a href="{{ path('group_index') }}">Retour a la liste</a>
+	</p>
+{% endblock %}

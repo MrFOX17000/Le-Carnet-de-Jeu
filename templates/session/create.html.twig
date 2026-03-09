@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une session - {{ group.name }}{% endblock %}
+
+{% block body %}
+  <h1>Créer une session</h1>
+
+  <p>Groupe : <strong>{{ group.name }}</strong></p>
+
+  {% for message in app.flashes('error') %}
+    <div class="alert alert-danger">
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  {% if activities|length == 0 %}
+    <p class="alert alert-warning">
+      Aucune activité dans ce groupe. <a href="{{ path('activity_create', { id: group.id }) }}">Créer une activité d'abord</a>.
+    </p>
+  {% else %}
+    <form method="post">
+      <div>
+        <label for="activityId">Activité</label>
+        <select id="activityId" name="activityId" required>
+          <option value="">-- Sélectionner une activité --</option>
+          {% for activity in activities %}
+            <option value="{{ activity.id }}">{{ activity.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="title">Titre (optionnel)</label>
+        <input type="text" id="title" name="title" placeholder="Ex: Match 1, Session du jour...">
+      </div>
+
+      <div>
+        <label for="playedAt">Date et heure de la session</label>
+        <input type="datetime-local" id="playedAt" name="playedAt" required>
+      </div>
+
+      <button type="submit">Créer la session</button>
+    </form>
+  {% endif %}
+
+  <p>
+    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
+  </p>
+{% endblock %}
