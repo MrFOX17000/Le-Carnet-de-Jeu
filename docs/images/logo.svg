@@ -1,0 +1,33 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background subtle circle -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#0f766e" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- Dice (left component) -->
+  <g transform="translate(55, 75)">
+    <!-- Cube faces -->
+    <rect x="0" y="0" width="35" height="35" fill="none" stroke="#0f766e" stroke-width="2.5" rx="2"/>
+    <!-- Dot pattern for dice -->
+    <circle cx="8" cy="8" r="2.5" fill="#0f766e"/>
+    <circle cx="17.5" cy="17.5" r="2.5" fill="#0f766e"/>
+    <circle cx="27" cy="27" r="2.5" fill="#0f766e"/>
+  </g>
+  
+  <!-- Quill/Pen (right component) -->
+  <g transform="translate(105, 70)">
+    <!-- Feather curve -->
+    <path d="M 12 2 Q 14 8 12 15 L 8 35 Q 7 38 5 40" 
+          fill="none" stroke="#0f766e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Feather detail lines -->
+    <path d="M 15 8 L 10 12" fill="none" stroke="#0f766e" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 16 16 L 10 20" fill="none" stroke="#0f766e" stroke-width="1.5" opacity="0.6"/>
+    <!-- Tip -->
+    <circle cx="12" cy="2" r="3" fill="#0f766e"/>
+  </g>
+  
+  <!-- Optional: Small accent element (game controller hint) -->
+  <g transform="translate(90, 125)" opacity="0.4">
+    <circle cx="0" cy="0" r="2" fill="#0f766e"/>
+    <circle cx="8" cy="0" r="2" fill="#0f766e"/>
+    <circle cx="4" cy="5" r="2" fill="#0f766e"/>
+  </g>
+</svg>

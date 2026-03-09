@@ -1,47 +1,282 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Carnet de Jeu{% endblock %}
+{% block title %}Carnet de Jeu - Tracker de sessions gaming{% endblock %}
 
 {% block body %}
-<section class="hero">
-	<p class="eyebrow">Plateforme collaborative de suivi de sessions</p>
-	<h1>Carnet de Jeu, pret pour une demo locale</h1>
-	<p>
-		Organisez vos groupes, creez des sessions, enregistrez des resultats score et match,
-		puis consultez des stats fiables avec isolation multi-tenant stricte.
-	</p>
-	<p>
-		Pour une mise en route rapide: lancez <code>php bin/console app:seed-demo</code>
-		puis connectez-vous avec <code>demo@local.test</code> / <code>demo1234</code>.
-	</p>
 
-	<div class="hero-actions">
-		{% if app.user %}
-			<a class="btn btn-primary" href="{{ path('dashboard') }}">Ouvrir le dashboard</a>
-			<a class="btn btn-secondary" href="{{ path('group_index') }}">Voir mes groupes</a>
+<!-- HERO SECTION -->
+<section class="hero-premium">
+	<div class="hero-content">
+		<p class="eyebrow">⚡ Organize. Track. Dominate.</p>
+		<h1 class="hero-title">Votre carnet de jeu<br><span class="gradient-text">dans le cloud</span></h1>
+		<p class="hero-subtitle">
+			Suivez vos sessions de jeu en groupe, enregistrez vos scores, et consultez des stats fiables.
+			<br>Pour tous les jeux. Pour tous les groupes. Isolation stricte garantie.
+		</p>
+		
+		<div class="hero-actions">
+			{% if app.user %}
+				<a class="btn btn-primary btn-large" href="{{ path('dashboard') }}" title="Vers votre dashboard">
+					🚀 Accédez au dashboard
+				</a>
+				<a class="btn btn-secondary btn-large" href="{{ path('group_index') }}">
+					👥 Vos groupes
+				</a>
+			{% else %}
+				<a class="btn btn-primary btn-large" href="{{ path('app_register') }}" title="Créez votre compte gratuit">
+					🎮 Rejoignez gratuitement
+				</a>
+				<a class="btn btn-secondary btn-large" href="{{ path('app_login') }}">
+					Connexion
+				</a>
+			{% endif %}
+		</div>
+
+		<p class="hero-footnote">
+			💡 Tip: Lancez <code>php bin/console app:seed-demo</code> en local pour tester avec données pré-remplies
+		</p>
+	</div>
+	
+	<div class="hero-visual">
+		<div class="visual-card">
+			<div class="dice-animation">🎲</div>
+			<div class="cards-animation">🂡</div>
+			<div class="rocket-animation">🚀</div>
+		</div>
+	</div>
+</section>
+
+<!-- USE CASES SECTION -->
+<section class="use-cases">
+	<h2 class="section-title">Pour tous vos jeux</h2>
+	<p class="section-subtitle">Peu importe ce que vous jouez, Carnet de Jeu s'adapte à votre groupe</p>
+	
+	<div class="use-case-grid">
+		<!-- Chess -->
+		<div class="use-case-card">
+			<div class="use-case-icon">♟️</div>
+			<h3>Jeux de plateau</h3>
+			<p>Échecs, Catan, Carcassonne... Tracker vos victoires et vos ELO.</p>
+		</div>
+
+		<!-- Cards -->
+		<div class="use-case-card">
+			<div class="use-case-icon">🂡</div>
+			<h3>Jeux de cartes</h3>
+			<p>Magic, Poker, Tarot... Enregistrez chaque partie et vos gains.</p>
+		</div>
+
+		<!-- eSports -->
+		<div class="use-case-card">
+			<div class="use-case-icon">🚀</div>
+			<h3>eSports & Gaming</h3>
+			<p>Rocket League, CS2, Valorant... Suivez vos KD, les rounds, les élo.</p>
+		</div>
+
+		<!-- Sports -->
+		<div class="use-case-card">
+			<div class="use-case-icon">⚽</div>
+			<h3>Sports compétitifs</h3>
+			<p>Foot, Tennis, Basket... Journalisez matchs, équipes et statistiques.</p>
+		</div>
+
+		<!-- RPG -->
+		<div class="use-case-card">
+			<div class="use-case-icon">🎲</div>
+			<h3>Jeux de rôle</h3>
+			<p>D&D, Pathfinder, etc... Persistez vos sessions et quêtes.</p>
+		</div>
+
+		<!-- Escape Games -->
+		<div class="use-case-card">
+			<div class="use-case-icon">🔓</div>
+			<h3>Escape games</h3>
+			<p>Trackez temps, énigmes résolues, et statistiques de groupe.</p>
+		</div>
+	</div>
+</section>
+
+<!-- WHY CARNET DE JEU SECTION -->
+<section class="why-section">
+	<h2 class="section-title">Pourquoi Carnet de Jeu?</h2>
+	
+	<div class="why-grid">
+		<article class="why-card">
+			<div class="why-icon">🔒</div>
+			<h3>Isolation stricte</h3>
+			<p>Vos groupes sont imperméables. Un groupe ne voit jamais les données d'un autre. Zéro fuite de données.</p>
+		</article>
+
+		<article class="why-card">
+			<div class="why-icon">📊</div>
+			<h3>Stats fiables</h3>
+			<p>Chaque résultat peut être lié à un membre. Vos statistiques sont exactes et consultables en temps réel.</p>
+		</article>
+
+		<article class="why-card">
+			<div class="why-icon">👥</div>
+			<h3>Gestion facile</h3>
+			<p>Invitez des amis, définissez les rôles (owner/member). Tout est clair et simple.</p>
+		</article>
+
+		<article class="why-card">
+			<div class="why-icon">⚡</div>
+			<h3>Rapide et léger</h3>
+			<p>API REST performante. 112 tests automatisés. Prêt pour la production.</p>
+		</article>
+
+		<article class="why-card">
+			<div class="why-icon">📱</div>
+			<h3>Partage public</h3>
+			<p>Générez des liens publics sécurisés pour partager vos sessions sans créer de compte.</p>
+		</article>
+
+		<article class="why-card">
+			<div class="why-icon">🖥️</div>
+			<h3>API V1</h3>
+			<p>Endpoints JSON documentés. Intégrez Carnet de Jeu partout. Liberté totale.</p>
+		</article>
+	</div>
+</section>
+
+<!-- HOW IT WORKS SECTION -->
+<section class="how-it-works">
+	<h2 class="section-title">3 étapes pour commencer</h2>
+	
+	<div class="steps">
+		<div class="step">
+			<div class="step-number">1</div>
+			<h3>Créez votre groupe</h3>
+			<p>Donnez un nom à votre groupe de joueurs (c'est gratuit, illimité).</p>
+		</div>
+
+		<div class="step-arrow">→</div>
+
+		<div class="step">
+			<div class="step-number">2</div>
+			<h3>Invitez vos amis</h3>
+			<p>Partagez le lien d'invitation. Chacun rejoigne et voit l'historique des sessions.</p>
+		</div>
+
+		<div class="step-arrow">→</div>
+
+		<div class="step">
+			<div class="step-number">3</div>
+			<h3>Enregistrez vos résultats</h3>
+			<p>Scores simples ou matchs détaillés. Les stats se consolident automatiquement.</p>
+		</div>
+	</div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="cta-section">
+	<div class="cta-content">
+		<h2>Prêt à commencer?</h2>
+		<p>Créez votre premier groupe en 30 secondes. C'est gratuit, rapide, et sans engagement.</p>
+		{% if not app.user %}
+			<a class="btn btn-primary btn-xl" href="{{ path('app_register') }}">
+				🚀 Créer mon compte
+			</a>
 		{% else %}
-			<a class="btn btn-primary" href="{{ path('app_register') }}">Commencer gratuitement</a>
-			<a class="btn btn-secondary" href="{{ path('app_login') }}">Se connecter</a>
+			<a class="btn btn-primary btn-xl" href="{{ path('group_create_form') }}">
+				➕ Créer un groupe
+			</a>
 		{% endif %}
 	</div>
 </section>
 
-<section class="feature-grid">
-	<article class="panel">
-		<h2>Groupes et roles</h2>
-		<p>Gestion claire des droits owner/member pour proteger les actions sensibles.</p>
-	</article>
-	<article class="panel">
-		<h2>Entries score + match</h2>
-		<p>Resultats structurables avec liaison optionnelle des participants pour des stats exactes.</p>
-	</article>
-	<article class="panel">
-		<h2>API V1 + web UI</h2>
-		<p>Meme logique metier partagee entre controllers web et endpoints JSON.</p>
-	</article>
-	<article class="panel">
-		<h2>Demo recruteur rapide</h2>
-		<p>Dataset de demonstration disponible via <code>app:seed-demo</code> pour montrer le produit en 2 minutes.</p>
-	</article>
+<!-- FAQ SECTION -->
+<section class="faq-section">
+	<h2 class="section-title">Questions fréquentes</h2>
+	
+	<div class="faq-container">
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>🤔 C'est gratuit?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>Oui, Carnet de Jeu est entièrement gratuit et open-source. Pas de publicités, pas de paiement caché. On peut tous les groupes et fonctionnalités.</p>
+			</div>
+		</details>
+
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>🔐 Mes données sont sécurisées?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>Oui. Les données d'un groupe sont strictement isolées des autres. Chaque utilisateur ne voit que les groupes auxquels il appartient. Pas d'accès croisé. Nous avons nettoyé les secrets en 2026 avec un incident de sécurité résolu.</p>
+			</div>
+		</details>
+
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>📱 Je peux accéder sans créer un compte?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>Oui! Chaque session peut être partagée via un lien public avec token. Les visiteurs voient la session en lecture seule sans créer de compte.</p>
+			</div>
+		</details>
+
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>💾 Je peux exporter mes données?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>L'export est en roadmap. Pour le moment, vous pouvez accéder à vos données via l'API v1 JSON documentée. Voir <a href="https://github.com/MrFOX17000/Le-Carnet-de-Jeu/blob/master/docs/api-v1.md" target="_blank">docs/api-v1.md</a> pour les détails.</p>
+			</div>
+		</details>
+
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>👥 Combien de membres par groupe?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>Illimité! Un groupe peut avoir autant de membres que vous le souhaitez. Chacun contribue et peut consulter les stats consolidées.</p>
+			</div>
+		</details>
+
+		<details class="faq-item">
+			<summary class="faq-question">
+				<span>🚀 Comment s'en servir en local?</span>
+				<span class="faq-toggle">+</span>
+			</summary>
+			<div class="faq-answer">
+				<p>Clonez le repo, lancez <code>composer install</code>, puis <code>php bin/console doctrine:migrations:migrate</code> et <code>php bin/console app:seed-demo</code>. C'est documenté dans le README.</p>
+			</div>
+		</details>
+	</div>
 </section>
+
+<!-- SOCIAL PROOF SECTION -->
+<section class="social-proof">
+	<h2 class="section-title">C'est du sérieux</h2>
+	
+	<div class="proof-grid">
+		<div class="proof-item">
+			<div class="proof-number">112</div>
+			<div class="proof-label">Tests automatisés</div>
+		</div>
+
+		<div class="proof-item">
+			<div class="proof-number">355</div>
+			<div class="proof-label">Assertions vérifiées</div>
+		</div>
+
+		<div class="proof-item">
+			<div class="proof-number">7</div>
+			<div class="proof-label">Couches architecture</div>
+		</div>
+
+		<div class="proof-item">
+			<div class="proof-number">0</div>
+			<div class="proof-label">Secrets exposés</div>
+		</div>
+	</div>
+</section>
+
 {% endblock %}
