@@ -12,6 +12,6 @@ final class HelloControllerTest extends WebTestCase
         $client->request('GET', '/hello');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Organize. Track. Dominate.');
+        self::assertSelectorTextContains('body', 'Suivez vos sessions en groupe');
     }
 }

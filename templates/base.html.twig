@@ -14,7 +14,7 @@
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
-    <body>
+    <body class="{% block body_class %}{% endblock %}">
         <header class="site-header">
             <div class="site-header-inner">
                 <a class="brand" href="{{ path('app_home') }}" aria-label="Accueil Carnet de Jeu">

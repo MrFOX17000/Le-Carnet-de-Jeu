@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg: #0f1419;
-    --bg-alt: #1a1f2e;
-    --surface: #16212e;
-    --surface-alt: #1f2a3e;
-    --text: #e4e9f0;
-    --text-light: #d6ddea;
-    --text-muted: #a0aac0;
-    --primary: #00d4ff;
-    --primary-dark: #00a8cc;
-    --accent: #ff006e;
-    --accent-alt: #ffb703;
+    --bg: #f5f7fa;
+    --bg-alt: #eef2f6;
+    --surface: #ffffff;
+    --surface-alt: #f8fafc;
+    --text: #1e293b;
+    --text-light: #334155;
+    --text-muted: #64748b;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --accent: #0f766e;
+    --accent-alt: #94a3b8;
     --success: #06d6a0;
     --danger: #ef476f;
-    --border: #2a3f5f;
-    --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.6);
+    --border: #d6dee8;
+    --shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    --shadow-sm: 0 6px 12px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12);
 }
 
 * {
@@ -33,9 +33,7 @@ body {
     font-family: "Exo 2", "Trebuchet MS", sans-serif;
     color: var(--text);
     background: var(--bg);
-    background-image: 
-        radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(255, 0, 110, 0.05) 0%, transparent 50%);
+    background-image: none;
     min-height: 100vh;
     line-height: 1.6;
 }
@@ -61,10 +59,7 @@ h2 { font-size: 2rem; }
 h3 { font-size: 1.4rem; }
 
 .gradient-text {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary);
 }
 
 /* ============================================
@@ -76,7 +71,7 @@ h3 { font-size: 1.4rem; }
     top: 0;
     z-index: 100;
     backdrop-filter: blur(10px);
-    background: rgba(15, 20, 25, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     border-bottom: 1px solid var(--border);
 }
 
@@ -131,8 +126,8 @@ h3 { font-size: 1.4rem; }
 }
 
 .site-nav a:hover {
-    color: var(--primary);
-    background: rgba(0, 212, 255, 0.1);
+    color: var(--primary-dark);
+    background: #eff6ff;
     text-decoration: none;
 }
 
@@ -165,8 +160,8 @@ h3 { font-size: 1.4rem; }
 }
 
 .variant-link.active {
-    color: #07151b;
-    background: linear-gradient(135deg, var(--primary), var(--accent-alt));
+    color: #ffffff;
+    background: var(--primary);
 }
 
 [data-reveal] {
@@ -276,7 +271,8 @@ h3 { font-size: 1.4rem; }
     width: min(100%, 580px);
     height: auto;
     display: block;
-    border-radius: 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
     box-shadow: var(--shadow);
 }
 
@@ -366,7 +362,7 @@ h3 { font-size: 1.4rem; }
 .use-case-card:hover {
     border-color: var(--primary);
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+    box-shadow: var(--shadow);
 }
 
 .use-case-card:hover .use-case-overlay {
@@ -444,7 +440,7 @@ h3 { font-size: 1.4rem; }
 .how-it-works {
     margin: 5rem 0;
     padding: 3rem 2rem;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(255, 0, 110, 0.05));
+    background: var(--surface);
     border-radius: 20px;
     border: 1px solid var(--border);
 }
@@ -467,8 +463,8 @@ h3 { font-size: 1.4rem; }
 .step-number {
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: black;
+    background: var(--primary);
+    color: #fff;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -501,21 +497,22 @@ h3 { font-size: 1.4rem; }
 .cta-section {
     margin: 5rem 0;
     padding: 3rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
     text-align: center;
-    color: black;
+    color: var(--text);
     box-shadow: var(--shadow);
 }
 
 .cta-section h2 {
-    color: black;
+    color: var(--text);
     font-size: 2.5rem;
     margin-bottom: 1rem;
 }
 
 .cta-section p {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--text-muted);
     font-size: 1.1rem;
     max-width: 50ch;
     margin: 0 auto 2rem;
@@ -622,15 +619,6 @@ details[open] .faq-toggle {
     box-shadow: var(--shadow-sm);
 }
 
-.proof-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
 .proof-label {
     color: var(--text-muted);
     margin-top: 0.5rem;
@@ -658,14 +646,14 @@ details[open] .faq-toggle {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: #000;
+    background: var(--primary);
+    color: #fff;
     border: 1px solid var(--primary);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
 }
 
 .btn-secondary {
@@ -787,7 +775,7 @@ label {
 
 .site-footer {
     border-top: 1px solid var(--border);
-    background: rgba(15, 20, 25, 0.9);
+    background: #ffffff;
     margin-top: 3rem;
 }
 
@@ -821,28 +809,50 @@ label {
     color: var(--primary);
 }
 
-.home-corporate .hero-title {
-    font-size: clamp(2rem, 4.2vw, 3.4rem);
+body.theme-gaming {
+    --bg: #0f1419;
+    --bg-alt: #1a1f2e;
+    --surface: #16212e;
+    --surface-alt: #1f2a3e;
+    --text: #e4e9f0;
+    --text-light: #d6ddea;
+    --text-muted: #a0aac0;
+    --primary: #00d4ff;
+    --primary-dark: #00a8cc;
+    --accent: #ff006e;
+    --accent-alt: #ffb703;
+    --border: #2a3f5f;
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.6);
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 0, 110, 0.05) 0%, transparent 50%);
 }
 
-.home-corporate .gradient-text {
-    background: linear-gradient(135deg, #96d6f2, #c6e2ef);
+body.theme-gaming .gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-.home-corporate .hero-chip {
-    border-color: rgba(150, 214, 242, 0.45);
-    background: rgba(150, 214, 242, 0.13);
+body.theme-gaming .cta-section {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: black;
 }
 
-.home-corporate .cta-section {
-    background: linear-gradient(135deg, #8fc5d8 0%, #aacfdc 100%);
+body.theme-gaming .cta-section h2 {
+    color: black;
 }
 
-.home-corporate .use-case-card::before {
-    background: linear-gradient(180deg, rgba(10, 20, 28, 0.28) 0%, rgba(10, 20, 28, 0.74) 100%);
+body.theme-gaming .cta-section p {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+body.theme-gaming .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #000;
 }
 
 input:focus, textarea:focus, select:focus {

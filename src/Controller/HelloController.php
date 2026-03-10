@@ -13,12 +13,15 @@ final class HelloController extends AbstractController
     #[Route('/hello', name: 'app_hello')]
     public function index(Request $request): Response
     {
-        $variant = $request->query->get('variant');
-        $isCorporate = $variant === 'corporate';
+        $variant = $request->query->get('variant', 'classic');
+        $allowedVariants = ['classic', 'gaming'];
+        if (!in_array($variant, $allowedVariants, true)) {
+            $variant = 'classic';
+        }
 
         return $this->render('hello/index.html.twig', [
             'controller_name' => 'HelloController',
-            'is_corporate' => $isCorporate,
+            'variant' => $variant,
         ]);
     }
 }

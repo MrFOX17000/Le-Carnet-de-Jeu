@@ -1,21 +1,21 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Carnet de Jeu - Tracker de sessions gaming{% endblock %}
+{% block body_class %}{% if variant == 'gaming' %}theme-gaming{% else %}theme-classic{% endif %}{% endblock %}
 
 {% block body %}
-<div class="home-variant{% if is_corporate %} home-corporate{% endif %}">
+<div class="home-variant{% if variant == 'gaming' %} home-gaming{% else %} home-classic{% endif %}">
 <div class="variant-switch" data-reveal>
-    <a class="variant-link{% if not is_corporate %} active{% endif %}" href="{{ path('app_home') }}">Style gaming</a>
-    <a class="variant-link{% if is_corporate %} active{% endif %}" href="{{ path('app_home', {variant: 'corporate'}) }}">Style corporate</a>
+    <a class="variant-link{% if variant == 'classic' %} active{% endif %}" href="{{ path('app_home') }}">Style classique</a>
+    <a class="variant-link{% if variant == 'gaming' %} active{% endif %}" href="{{ path('app_home', {variant: 'gaming'}) }}">Style gaming</a>
 </div>
 
 <section class="hero-premium" data-reveal>
     <div class="hero-content">
-        <p class="eyebrow">{% if is_corporate %}Pilotage clair. Equipes alignees.{% else %}Organize. Track. Dominate.{% endif %}</p>
-        <h1 class="hero-title">Votre carnet de jeu <span class="gradient-text">dans le cloud</span></h1>
+        <p class="eyebrow">Carnet de Jeu</p>
+        <h1 class="hero-title">Suivez vos sessions en groupe</h1>
         <p class="hero-subtitle">
-            Suivez vos sessions de jeu en groupe, enregistrez vos scores, et consultez des statistiques fiables.
-            Pour tous les jeux et pour tous les groupes.
+            Une interface simple pour enregistrer les parties, organiser les groupes et garder un historique propre.
         </p>
 
         <div class="hero-actions">
@@ -26,12 +26,6 @@
                 <a class="btn btn-primary btn-large" href="{{ path('app_register') }}">Creer un compte</a>
                 <a class="btn btn-secondary btn-large" href="{{ path('app_login') }}">Se connecter</a>
             {% endif %}
-        </div>
-
-        <div class="hero-metrics" aria-label="Indicateurs de qualite">
-            <span class="hero-chip">112 tests automatises</span>
-            <span class="hero-chip">355 assertions</span>
-            <span class="hero-chip">Isolation multi-groupes</span>
         </div>
     </div>
 
@@ -94,23 +88,23 @@
 </section>
 
 <section class="why-section" data-reveal>
-    <h2 class="section-title">Pourquoi Carnet de Jeu</h2>
+    <h2 class="section-title">Pourquoi choisir Carnet de Jeu</h2>
     <div class="why-grid">
         <article class="why-card">
-            <h3>Isolation stricte</h3>
-            <p>Un groupe ne voit jamais les donnees d'un autre groupe.</p>
+            <h3>Simple a prendre en main</h3>
+            <p>Ajoutez des parties en quelques clics, sans ecran technique inutile.</p>
         </article>
         <article class="why-card">
-            <h3>Statistiques fiables</h3>
-            <p>Chaque resultat peut etre rattache a un membre precis.</p>
+            <h3>Collaboration par groupe</h3>
+            <p>Chaque equipe garde son espace, ses membres et son historique.</p>
         </article>
         <article class="why-card">
-            <h3>Gestion simple</h3>
-            <p>Invitez vos amis, attribuez les roles, suivez l'historique.</p>
+            <h3>Historique clair</h3>
+            <p>Retrouvez facilement les resultats passes et l'evolution de vos sessions.</p>
         </article>
         <article class="why-card">
-            <h3>Rapide et solide</h3>
-            <p>Backend Symfony, architecture claire et tests automatises.</p>
+            <h3>Accessible partout</h3>
+            <p>Utilisable sur ordinateur, tablette et mobile avec un rendu coherent.</p>
         </article>
     </div>
 </section>
@@ -141,7 +135,7 @@
 <section class="cta-section" data-reveal>
     <div class="cta-content">
         <h2>Pret a commencer?</h2>
-        <p>Creez votre premier groupe en moins d'une minute.</p>
+        <p>Creez votre premier groupe et commencez a enregistrer vos parties.</p>
         {% if not app.user %}
             <a class="btn btn-primary btn-xl" href="{{ path('app_register') }}">Creer mon compte</a>
         {% else %}
@@ -169,23 +163,19 @@
 </section>
 
 <section class="social-proof" data-reveal>
-    <h2 class="section-title">C'est du serieux</h2>
+    <h2 class="section-title">Une plateforme pensee pour vos groupes</h2>
     <div class="proof-grid">
         <div class="proof-item">
-            <div class="proof-number">112</div>
-            <div class="proof-label">Tests automatises</div>
+            <div class="proof-label">Creation de groupe rapide</div>
         </div>
         <div class="proof-item">
-            <div class="proof-number">355</div>
-            <div class="proof-label">Assertions verifiees</div>
+            <div class="proof-label">Saisie des sessions simplifiee</div>
         </div>
         <div class="proof-item">
-            <div class="proof-number">7</div>
-            <div class="proof-label">Couches d'architecture</div>
+            <div class="proof-label">Partage lisible des resultats</div>
         </div>
         <div class="proof-item">
-            <div class="proof-number">100%</div>
-            <div class="proof-label">Orientation jeu en groupe</div>
+            <div class="proof-label">Interface adaptee mobile et desktop</div>
         </div>
     </div>
 </section>
