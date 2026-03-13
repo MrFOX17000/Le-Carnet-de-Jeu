@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Page non trouvée{% endblock %}
+
+{% block body %}
+<section class="error-page">
+    <div class="error-card">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page non trouvée</h1>
+        <p class="error-message">
+            La page que vous recherchez n'existe pas ou a été supprimée.
+        </p>
+        <p class="error-description">
+            Vérifiez l'adresse URL et réessayez. Si le problème persiste, 
+            <a href="{{ path('app_home') }}">retournez à l'accueil</a>.
+        </p>
+
+        <nav class="error-nav">
+            <a href="{{ path('app_home') }}" class="btn btn-secondary">Retour à l'accueil</a>
+            {% if app.user %}
+                <a href="{{ path('dashboard') }}" class="btn btn-primary">Mes groupes</a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="btn btn-primary">Se connecter</a>
+            {% endif %}
+        </nav>
+    </div>
+</section>
+{% endblock %}

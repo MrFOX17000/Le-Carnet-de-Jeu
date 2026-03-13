@@ -67,7 +67,24 @@ class Entry
 
     public function setSession(?Session $session): static
     {
+        if (null === $session) {
+            if (null !== $this->session) {
+                $currentSession = $this->session;
+                $this->session = null;
+
+                if ($currentSession->getEntries()->contains($this)) {
+                    $currentSession->removeEntry($this);
+                }
+            }
+
+            return $this;
+        }
+
         $this->session = $session;
+
+        if (!$session->getEntries()->contains($this)) {
+            $session->addEntry($this);
+        }
 
         return $this;
     }

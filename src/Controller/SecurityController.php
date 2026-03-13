@@ -21,7 +21,15 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
+        $googleClientId = $_ENV['GOOGLE_CLIENT_ID'] ?? $_SERVER['GOOGLE_CLIENT_ID'] ?? '';
+        $googleClientSecret = $_ENV['GOOGLE_CLIENT_SECRET'] ?? $_SERVER['GOOGLE_CLIENT_SECRET'] ?? '';
+        $googleOauthEnabled = $googleClientId !== '' && $googleClientSecret !== '';
+
+        return $this->render('security/login.html.twig', [
+            'last_username' => $lastUsername,
+            'error' => $error,
+            'google_oauth_enabled' => $googleOauthEnabled,
+        ]);
     }
 
     #[Route(path: '/logout', name: 'app_logout')]

@@ -1,49 +1,257 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Créer une session - {{ group.name }}{% endblock %}
+{% set isEdit = isEdit|default(false) %}
+{% set pageTitle = isEdit ? 'Modifier la session' : 'Créer une session' %}
+{% set currentSession = currentSession|default(null) %}
+{% set preferredActivityId = preferredActivityId|default(0) %}
+
+{% block title %}{{ pageTitle }} - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>Créer une session</h1>
+<section class="session-create-page">
+  <div class="session-create-card">
+    <header class="session-create-header">
+      <p class="session-create-kicker"><a href="{{ path('group_show', { id: group.id }) }}">{{ group.name }}</a> · {{ isEdit ? 'Édition de session' : 'Nouvelle session' }}</p>
+      <h1>{{ pageTitle }}</h1>
+      {% if not isEdit %}
+        <nav class="flow-steps" aria-label="Progression de création">
+          <span class="flow-step is-done"><strong>1</strong> Activité</span>
+          <span class="flow-step is-active"><strong>2</strong> Session</span>
+          <span class="flow-step"><strong>3</strong> Résultats</span>
+        </nav>
+        <div class="session-flow-help" role="note" aria-label="Étapes de création">
+          <p><strong>Étapes :</strong> 1) choisir une activité · 2) créer la session · 3) ajouter des résultats.</p>
+          {% if preferredActivityId > 0 %}
+            <p class="session-flow-inline-note"><strong>Contexte gardé :</strong> l'activité choisie juste avant est déjà pré-sélectionnée.</p>
+          {% endif %}
+            <a class="btn btn-secondary btn-sm" href="{{ path('activity_create', { id: group.id }) }}">Je veux d'abord créer une activité</a>
+        </div>
+      {% endif %}
+    </header>
 
-  <p>Groupe : <strong>{{ group.name }}</strong></p>
+    {% for message in app.flashes('error') %}
+      <div class="flash flash-error">{{ message }}</div>
+    {% endfor %}
 
-  {% for message in app.flashes('error') %}
-    <div class="alert alert-danger">
-      {{ message }}
-    </div>
-  {% endfor %}
-
-  {% if activities|length == 0 %}
-    <p class="alert alert-warning">
-      Aucune activité dans ce groupe. <a href="{{ path('activity_create', { id: group.id }) }}">Créer une activité d'abord</a>.
-    </p>
-  {% else %}
-    <form method="post">
-      <div>
-        <label for="activityId">Activité</label>
-        <select id="activityId" name="activityId" required>
-          <option value="">-- Sélectionner une activité --</option>
-          {% for activity in activities %}
-            <option value="{{ activity.id }}">{{ activity.name }}</option>
-          {% endfor %}
-        </select>
+    {% if activities|length == 0 %}
+      <div class="session-create-empty">
+        <p><strong>Aucune activité dans ce groupe.</strong></p>
+        <p class="text-muted">Tu dois d'abord créer au moins une activité avant de pouvoir créer une session.</p>
+        <a class="btn btn-secondary" href="{{ path('activity_create', { id: group.id }) }}">Créer une activité d'abord</a>
       </div>
+    {% else %}
+      <form method="post" class="session-create-form">
+        <div class="field-with-icon">
+          <span class="field-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H7Z"/></svg>
+          </span>
+          <div>
+            <label for="activityId">Activité</label>
+            <select id="activityId" name="activityId" required>
+              <option value="">-- Sélectionner une activité --</option>
+              {% for activity in activities %}
+                {% set activityMeta = activity_meta(activity.name, activity.contextMode.value) %}
+                <option value="{{ activity.id }}"
+                  data-sessions-count="{{ activity.sessions|length }}"
+                  data-mode="{{ activity.contextMode.value }}"
+                  data-label="{{ activity.name }}"
+                  data-short="{{ activityMeta.shortLabel }}"
+                  data-icon-url="{{ activityMeta.iconUrl ?: '' }}"
+                  data-icon-alt="{{ activityMeta.iconAlt }}"
+                  data-accent="{{ activityMeta.accent }}"
+                  data-background="{{ activityMeta.background }}"
+                  data-foreground="{{ activityMeta.foreground }}"
+                  {{ currentSession and currentSession.activity and activity.id == currentSession.activity.id ? 'selected' : (preferredActivityId > 0 and activity.id == preferredActivityId ? 'selected' : '') }}>{{ activity.name }}</option>
+              {% endfor %}
+            </select>
+            <p class="activity-context-hint" id="activity-mode-hint" aria-live="polite"></p>
+            {% if not isEdit %}
+              <p class="session-auto-hint" id="session-activity-auto-hint" aria-live="polite"></p>
+            {% endif %}
+            <div id="session-selected-activity" class="session-selected-activity" hidden>
+              <span id="session-selected-activity-badge" class="activity-mini-badge">
+                <span id="session-selected-activity-icon"></span>
+                <span id="session-selected-activity-label"></span>
+              </span>
+            </div>
+          </div>
+        </div>
 
-      <div>
-        <label for="title">Titre (optionnel)</label>
-        <input type="text" id="title" name="title" placeholder="Ex: Match 1, Session du jour...">
-      </div>
+        <div class="field-with-icon">
+          <span class="field-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 5h14v2H5V5Zm0 6h14v2H5v-2Zm0 6h9v2H5v-2Z"/></svg>
+          </span>
+          <div>
+            <label for="title">Titre (optionnel)</label>
+            <input type="text" id="title" name="title" value="{{ currentSession and currentSession.title ? currentSession.title : '' }}" placeholder="Ex: Match 1, Session du jour...">
+            {% if not isEdit %}
+              <div class="session-title-tools">
+                <button type="button" class="btn btn-secondary btn-sm" id="session-generate-title">Générer un titre automatiquement</button>
+                <span class="session-auto-hint" id="session-title-auto-hint" aria-live="polite"></span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
 
-      <div>
-        <label for="playedAt">Date et heure de la session</label>
-        <input type="datetime-local" id="playedAt" name="playedAt" required>
-      </div>
+        <div class="field-with-icon">
+          <span class="field-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10Z"/></svg>
+          </span>
+          <div>
+            <label for="playedAt">Date et heure de la session</label>
+            <input type="datetime-local" id="playedAt" name="playedAt" value="{{ currentSession and currentSession.playedAt ? currentSession.playedAt|date('Y-m-d\\TH:i') : '' }}" required>
+          </div>
+        </div>
 
-      <button type="submit">Créer la session</button>
-    </form>
-  {% endif %}
+        <div class="session-create-actions">
+          <button type="submit" class="btn btn-primary">{{ isEdit ? 'Enregistrer les modifications' : 'Créer la session' }}</button>
+          {% if currentSession %}
+            <a class="btn btn-secondary" href="{{ path('session_show', { groupId: group.id, sessionId: currentSession.id }) }}">Retour à la session</a>
+          {% else %}
+            <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+          {% endif %}
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</section>
+<script>
+(function () {
+  const isEdit = {{ isEdit ? 'true' : 'false' }};
+  const preferredActivityId = {{ preferredActivityId }};
+  const modeHints = {
+    ranking:           'Classement libre — chaque participant aura son propre score.',
+    duel:              'Duel 1v1 — opposition nommée entre deux joueurs identifiés.',
+    duel_equipe:       'Match d\'équipes internes — deux camps de membres s\'affrontent.',
+    groupe_vs_externe: 'Groupe vs Extérieur — votre équipe contre des adversaires externes.',
+  };
+  const sel = document.getElementById('activityId');
+  const hint = document.getElementById('activity-mode-hint');
+  const activityAutoHint = document.getElementById('session-activity-auto-hint');
+  const titleAutoHint = document.getElementById('session-title-auto-hint');
+  const titleInput = document.getElementById('title');
+  const playedAtInput = document.getElementById('playedAt');
+  const generateTitleBtn = document.getElementById('session-generate-title');
+  if (!sel || !hint) return;
 
-  <p>
-    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
-  </p>
+  let autoTitleManaged = !isEdit;
+
+  function formatDateLabel(raw) {
+    if (!raw || !raw.includes('T')) return '';
+    const parts = raw.split('T');
+    const date = parts[0] || '';
+    const time = parts[1] || '';
+    const dateParts = date.split('-');
+    if (dateParts.length !== 3) return '';
+    return dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0] + (time ? ' ' + time : '');
+  }
+
+  function buildAutoTitle() {
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return '';
+    const dateLabel = formatDateLabel(playedAtInput ? playedAtInput.value : '');
+    if (!dateLabel) return 'Session ' + (opt.dataset.label || opt.textContent || '');
+    return 'Session ' + (opt.dataset.label || opt.textContent || '') + ' du ' + dateLabel;
+  }
+
+  function applyAutoTitle(force) {
+    if (isEdit || !titleInput) return;
+    const autoTitle = buildAutoTitle();
+    if (!autoTitle) return;
+    if (force || titleInput.value.trim() === '' || autoTitleManaged) {
+      titleInput.value = autoTitle;
+      autoTitleManaged = true;
+      if (titleAutoHint) {
+        titleAutoHint.textContent = 'Titre généré automatiquement.';
+      }
+    }
+  }
+
+  function autoSelectMostUsedActivity() {
+    if (isEdit) return;
+    const currentlySelected = sel.options[sel.selectedIndex];
+    if (currentlySelected && currentlySelected.value) {
+      if (activityAutoHint && preferredActivityId > 0 && currentlySelected.value === String(preferredActivityId)) {
+        activityAutoHint.textContent = 'Activité pré-sélectionnée depuis la page précédente : ' + (currentlySelected.dataset.label || currentlySelected.textContent || '') + '.';
+      }
+      return;
+    }
+
+    let bestOption = null;
+    let bestCount = -1;
+    Array.from(sel.options).forEach((option) => {
+      if (!option.value) return;
+      const sessionsCount = Number(option.dataset.sessionsCount || '0');
+      if (sessionsCount > bestCount) {
+        bestCount = sessionsCount;
+        bestOption = option;
+      }
+    });
+
+    if (bestOption) {
+      sel.value = bestOption.value;
+      if (activityAutoHint) {
+        activityAutoHint.textContent = 'Activité pré-sélectionnée : ' + (bestOption.dataset.label || bestOption.textContent || '') + ' (la plus utilisée du groupe).';
+      }
+    }
+  }
+
+  function update() {
+    const opt = sel.options[sel.selectedIndex];
+    const mode = opt ? opt.dataset.mode : '';
+    hint.textContent = modeHints[mode] || '';
+
+    const preview = document.getElementById('session-selected-activity');
+    const badge = document.getElementById('session-selected-activity-badge');
+    const icon = document.getElementById('session-selected-activity-icon');
+    const label = document.getElementById('session-selected-activity-label');
+    if (!preview || !badge || !icon || !label || !opt || !opt.value) {
+      if (preview) preview.hidden = true;
+      return;
+    }
+
+    preview.hidden = false;
+    badge.style.setProperty('--activity-accent', opt.dataset.accent || '#2563eb');
+    badge.style.setProperty('--activity-background', opt.dataset.background || 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)');
+    badge.style.setProperty('--activity-foreground', opt.dataset.foreground || '#1d4ed8');
+
+    if (opt.dataset.iconUrl) {
+      icon.innerHTML = '<img src="' + opt.dataset.iconUrl + '" alt="' + (opt.dataset.iconAlt || 'Icône activité') + '" loading="lazy">';
+    } else {
+      icon.textContent = opt.dataset.short || 'ACT';
+    }
+
+    label.textContent = opt.dataset.label || opt.textContent || '';
+
+    applyAutoTitle(false);
+  }
+
+  if (titleInput) {
+    titleInput.addEventListener('input', function () {
+      if (!isEdit && this.value.trim() !== '') {
+        autoTitleManaged = false;
+        if (titleAutoHint) {
+          titleAutoHint.textContent = 'Titre personnalisé.';
+        }
+      }
+    });
+  }
+
+  if (playedAtInput) {
+    playedAtInput.addEventListener('change', function () {
+      applyAutoTitle(false);
+    });
+  }
+
+  if (generateTitleBtn) {
+    generateTitleBtn.addEventListener('click', function () {
+      applyAutoTitle(true);
+    });
+  }
+
+  autoSelectMostUsedActivity();
+  sel.addEventListener('change', update);
+  update();
+})();
+</script>
 {% endblock %}

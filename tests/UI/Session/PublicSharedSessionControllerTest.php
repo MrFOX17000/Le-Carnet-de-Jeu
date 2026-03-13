@@ -18,7 +18,7 @@ final class PublicSharedSessionControllerTest extends DbWebTestCase
 
         // Créer un utilisateur propriétaire
         $owner = new User();
-        $owner->setEmail('owner@test.local');
+        $owner->setEmail('owner-public-token@test.local');
         $owner->setPassword('hashed_password');
         $owner->setCreatedAt(new \DateTimeImmutable());
         $owner->setIsVerified(true);
@@ -84,7 +84,7 @@ final class PublicSharedSessionControllerTest extends DbWebTestCase
 
         // Créer un utilisateur propriétaire
         $owner = new User();
-        $owner->setEmail('owner@test.local');
+        $owner->setEmail('owner-public-anon@test.local');
         $owner->setPassword('hashed_password');
         $owner->setCreatedAt(new \DateTimeImmutable());
         $owner->setIsVerified(true);

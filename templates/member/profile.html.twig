@@ -1,98 +1,332 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Profil - {{ member.email }} - {{ group.name }}{% endblock %}
+{% block title %}{{ member.displayName ?: member.email }} — {{ group.name }}{% endblock %}
 
 {% block body %}
-  <div class="member-profile">
-    <h1>{{ member.email }}</h1>
-    <p><strong>Groupe :</strong> {{ group.name }}</p>
+  <section class="member-profile-page">
+    <header class="member-profile-header">
+      <div>
+        <p class="member-kicker"><a href="{{ path('group_show', { id: group.id }) }}">{{ group.name }}</a> · Profil membre</p>
+        <h1>{{ member.displayName ?: member.email }}</h1>
+        <p class="member-subtitle">
+          {% if member.displayName %}
+            {{ member.email }} ·
+          {% endif %}
+          {% if memberRole %}Rôle : {{ memberRole|upper }}{% endif %}
+          {% if joinedAt %} · Membre depuis le {{ joinedAt|date('d/m/Y') }}{% endif %}
+        </p>
+      </div>
+      <div class="member-profile-header-actions">
+        <form method="get" class="season-filter-form">
+          <label for="member-season" class="season-filter-label">Saison</label>
+          <select id="member-season" name="season" onchange="this.form.submit()">
+            {% for key, label in seasonOptions %}
+              <option value="{{ key }}" {{ key == selectedSeason ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% if isOwnProfile %}
+          <a class="btn btn-secondary" href="{{ path('my_profile') }}">Mon profil</a>
+        {% endif %}
+        <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+      </div>
+    </header>
 
     <h2>Statistiques</h2>
-    <dl>
-      <dt>Sessions jouées</dt>
-      <dd>{{ stats.total_sessions }}</dd>
+    <div class="member-stats-grid">
+      <article class="member-stat-card">
+        <p>Sessions jouées</p>
+        <strong>{{ stats.total_sessions }}</strong>
+      </article>
+      <article class="member-stat-card">
+        <p>Entrées de score</p>
+        <strong>{{ stats.total_score_entries }}</strong>
+      </article>
+      <article class="member-stat-card">
+        <p>Entrées de match</p>
+        <strong>{{ stats.total_match_entries }}</strong>
+      </article>
+      <article class="member-stat-card">
+        <p>Total des points</p>
+        <strong>{{ stats.total_scores|number_format(0, ',', ' ') }}</strong>
+      </article>
+      <article class="member-stat-card">
+        <p>Meilleure perf</p>
+        <strong>{{ stats.best_score is not null ? stats.best_score|number_format(0, ',', ' ') : '—' }}</strong>
+      </article>
+      <article class="member-stat-card">
+        <p>Winrate match</p>
+        <strong>{{ stats.total_match_entries > 0 ? stats.win_rate|number_format(1, ',', ' ') ~ '%' : '—' }}</strong>
+      </article>
+    </div>
 
-      <dt>Entrées de score</dt>
-      <dd>{{ stats.total_score_entries }}</dd>
-
-      <dt>Entrées de match</dt>
-      <dd>{{ stats.total_match_entries }}</dd>
-
-      <dt>Total des points (scores)</dt>
-      <dd>{{ stats.total_scores }}</dd>
-    </dl>
-
-    <h2>Historique des sessions</h2>
-
-    {% if sessions|length == 0 %}
-      <p><em>Aucune participation enregistrée.</em></p>
-    {% else %}
-      <ul class="sessions-timeline">
-        {% for session in sessions %}
-          <li>
-            <div class="session-header">
-              <h3>
-                {% if session.title %}
-                  {{ session.title }}
-                {% else %}
-                  Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
-                {% endif %}
-              </h3>
-              <p class="session-meta">
-                <strong>{{ session.activity.name }}</strong> — {{ session.playedAt|date('d/m/Y H:i') }}
-              </p>
-            </div>
-
-            <div class="session-entries">
-              <h4>Participations :</h4>
-              <ul>
-                {% for entry in session.entries %}
-                  {% if entry.type.value == 'score_simple' %}
-                    {% for score in entry.scores %}
-                      {% if score.user and score.user.id == member.id %}
-                        <li>
-                          <strong>Score :</strong>
-                          {% if entry.label %}
-                            {{ entry.label }} —
-                          {% endif %}
-                          <strong>{{ score.score }}</strong> points
-                        </li>
-                      {% endif %}
-                    {% endfor %}
-                  {% elseif entry.type.value == 'match' and entry.entryMatch %}
-                    {% set match = entry.entryMatch %}
-                    {% if (match.homeUser and match.homeUser.id == member.id) or (match.awayUser and match.awayUser.id == member.id) %}
-                      <li>
-                        <strong>Match :</strong>
-                        {% if entry.label %}
-                          {{ entry.label }} —
-                        {% endif %}
-                        {% if match.homeUser and match.homeUser.id == member.id %}
-                          <strong>{{ match.homeName }}</strong> vs {{ match.awayName }}
-                          ({{ match.homeScore }} - {{ match.awayScore }})
-                        {% elseif match.awayUser and match.awayUser.id == member.id %}
-                          {{ match.homeName }} vs <strong>{{ match.awayName }}</strong>
-                          ({{ match.homeScore }} - {{ match.awayScore }})
-                        {% endif %}
-                      </li>
+    {% if highlights.favorite_activity or highlights.best_score is not null or recentForm is not empty %}
+      <div class="member-profile-layout">
+        <section class="member-profile-panel">
+          <div class="member-profile-panel-head">
+            <h2>Moments clés</h2>
+            <span>Aperçu rapide</span>
+          </div>
+          <div class="member-highlight-grid">
+            {% if highlights.favorite_activity %}
+              {% set favoriteMeta = activity_meta(highlights.favorite_activity.activity_name, highlights.favorite_activity.context_mode|default(null)) %}
+              <article class="member-highlight-card">
+                <p>Activité favorite</p>
+                <strong class="member-inline-activity">
+                  <span class="activity-mini-badge" style="--activity-accent: {{ favoriteMeta.accent }}; --activity-background: {{ favoriteMeta.background }}; --activity-foreground: {{ favoriteMeta.foreground }};">
+                    {% if favoriteMeta.iconUrl %}
+                      <img src="{{ favoriteMeta.iconUrl }}" alt="{{ favoriteMeta.iconAlt }}" loading="lazy">
+                    {% else %}
+                      <span>{{ favoriteMeta.shortLabel }}</span>
                     {% endif %}
-                  {% endif %}
-                {% endfor %}
-              </ul>
-            </div>
+                    {{ highlights.favorite_activity.activity_name }}
+                  </span>
+                </strong>
+                <span>{{ highlights.favorite_activity.sessions_count }} session{{ highlights.favorite_activity.sessions_count > 1 ? 's' : '' }}</span>
+              </article>
+            {% endif %}
+            {% if highlights.best_score is not null %}
+              <article class="member-highlight-card">
+                <p>Meilleure perf</p>
+                <strong>{{ highlights.best_score|number_format(0, ',', ' ') }} pts</strong>
+                <span>Meilleur score enregistré</span>
+              </article>
+            {% endif %}
+            {% if highlights.last_session %}
+              <article class="member-highlight-card">
+                <p>Dernière session</p>
+                <strong>{{ highlights.last_session.playedAt|date('d/m/Y') }}</strong>
+                <span>{{ highlights.last_session.title ?: highlights.last_session.activity.name }}</span>
+              </article>
+            {% endif %}
+          </div>
+        </section>
 
-            <p>
-              <a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
-                Voir la session complète
-              </a>
-            </p>
-          </li>
-        {% endfor %}
-      </ul>
+        <section class="member-profile-panel">
+          <div class="member-profile-panel-head">
+            <h2>Forme récente</h2>
+            <span>5 derniers matchs</span>
+          </div>
+          {% if recentForm is empty %}
+            <p class="text-muted">Pas encore assez de matchs liés à ce joueur dans ce groupe.</p>
+          {% else %}
+            <div class="member-form-strip">
+              {% for item in recentForm %}
+                {% set recentFormMeta = activity_meta(item.activityName) %}
+                <article class="member-form-card result-{{ item.code == 'V' ? 'win' : (item.code == 'N' ? 'draw' : 'loss') }}">
+                  <strong>{{ item.code }}</strong>
+                  <span class="member-form-activity">
+                    {% if recentFormMeta.iconUrl %}
+                      <img src="{{ recentFormMeta.iconUrl }}" alt="{{ recentFormMeta.iconAlt }}" loading="lazy">
+                    {% endif %}
+                    {{ item.activityName }}
+                  </span>
+                  <small>{{ item.playedAt|date('d/m') }}</small>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </section>
+      </div>
     {% endif %}
 
-    <p>
-      <a href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
-    </p>
-  </div>
+    {% if selectedSeason != 'all' and seasonHonors is not empty %}
+      <section class="member-profile-panel">
+        <div class="member-profile-panel-head">
+          <h2>Hall of fame saisonnier</h2>
+          <span>{{ seasonOptions[selectedSeason] }}</span>
+        </div>
+        <div class="member-honors-grid">
+          {% for honor in seasonHonors %}
+            {% set honorMeta = activity_meta(honor.activity_name, honor.context_mode|default(null)) %}
+            <article class="member-honor-card rank-{{ honor.rank }}">
+              <p>{{ honor.label }}</p>
+              <strong class="member-inline-activity">
+                <span class="activity-mini-badge" style="--activity-accent: {{ honorMeta.accent }}; --activity-background: {{ honorMeta.background }}; --activity-foreground: {{ honorMeta.foreground }};">
+                  {% if honorMeta.iconUrl %}
+                    <img src="{{ honorMeta.iconUrl }}" alt="{{ honorMeta.iconAlt }}" loading="lazy">
+                  {% else %}
+                    <span>{{ honorMeta.shortLabel }}</span>
+                  {% endif %}
+                  {{ honor.activity_name }}
+                </span>
+              </strong>
+              <span>{{ honor.value }}</span>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if allTimeRecordClaims is not empty or seasonRecordClaims is not empty %}
+      <section class="member-profile-panel">
+        <div class="member-profile-panel-head">
+          <h2>Records détenus</h2>
+          <span>{{ selectedSeason == 'all' ? 'Vue globale' : seasonOptions[selectedSeason] }}</span>
+        </div>
+        <div class="member-claims-layout">
+          {% if allTimeRecordClaims is not empty %}
+            <div>
+              <h3 class="member-records-subtitle">All-time</h3>
+              <div class="member-claims-grid">
+                {% for claim in allTimeRecordClaims %}
+                  {% set claimMeta = activity_meta(claim.activity_name, claim.scope|default(null)) %}
+                  <article class="member-claim-card">
+                    <p>{{ claim.title }}</p>
+                    <strong class="member-inline-activity">
+                      <span class="activity-mini-badge" style="--activity-accent: {{ claimMeta.accent }}; --activity-background: {{ claimMeta.background }}; --activity-foreground: {{ claimMeta.foreground }};">
+                        {% if claimMeta.iconUrl %}
+                          <img src="{{ claimMeta.iconUrl }}" alt="{{ claimMeta.iconAlt }}" loading="lazy">
+                        {% else %}
+                          <span>{{ claimMeta.shortLabel }}</span>
+                        {% endif %}
+                        {{ claim.activity_name }}
+                      </span>
+                    </strong>
+                    <span>{{ claim.value }}</span>
+                  </article>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+          {% if seasonRecordClaims is not empty %}
+            <div>
+              <h3 class="member-records-subtitle">Saison</h3>
+              <div class="member-claims-grid">
+                {% for claim in seasonRecordClaims %}
+                  {% set seasonClaimMeta = activity_meta(claim.activity_name, claim.scope|default(null)) %}
+                  <article class="member-claim-card member-claim-card-season">
+                    <p>{{ claim.title }}</p>
+                    <strong class="member-inline-activity">
+                      <span class="activity-mini-badge" style="--activity-accent: {{ seasonClaimMeta.accent }}; --activity-background: {{ seasonClaimMeta.background }}; --activity-foreground: {{ seasonClaimMeta.foreground }};">
+                        {% if seasonClaimMeta.iconUrl %}
+                          <img src="{{ seasonClaimMeta.iconUrl }}" alt="{{ seasonClaimMeta.iconAlt }}" loading="lazy">
+                        {% else %}
+                          <span>{{ seasonClaimMeta.shortLabel }}</span>
+                        {% endif %}
+                        {{ claim.activity_name }}
+                      </span>
+                    </strong>
+                    <span>{{ claim.value }}</span>
+                  </article>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="member-profile-panel">
+      <div class="member-profile-panel-head">
+        <h2>Activités maîtrisées</h2>
+        <span>{{ activityBreakdown|length }} activité{{ activityBreakdown|length > 1 ? 's' : '' }}</span>
+      </div>
+
+      {% if activityBreakdown is empty %}
+        <div class="member-empty">
+          <p>Aucune activité jouée pour le moment.</p>
+        </div>
+      {% else %}
+        <div class="member-activity-grid">
+          {% for item in activityBreakdown %}
+            {% set activityBreakdownMeta = activity_meta(item.activity_name, item.context_mode) %}
+            <article class="member-activity-card">
+              <div class="member-activity-card-head">
+                <div>
+                  <h3>
+                    <a href="{{ path('activity_show', { groupId: group.id, activityId: item.activity_id }) }}" class="member-activity-link">
+                      <span class="activity-mini-badge" style="--activity-accent: {{ activityBreakdownMeta.accent }}; --activity-background: {{ activityBreakdownMeta.background }}; --activity-foreground: {{ activityBreakdownMeta.foreground }};">
+                        {% if activityBreakdownMeta.iconUrl %}
+                          <img src="{{ activityBreakdownMeta.iconUrl }}" alt="{{ activityBreakdownMeta.iconAlt }}" loading="lazy">
+                        {% else %}
+                          <span>{{ activityBreakdownMeta.shortLabel }}</span>
+                        {% endif %}
+                        {{ item.activity_name }}
+                      </span>
+                    </a>
+                  </h3>
+                  {% if item.season_honor_label %}
+                    <p class="member-activity-honor">{{ item.season_honor_label }} de la saison</p>
+                  {% endif %}
+                </div>
+                <span class="activity-mode-badge">{{ item.context_mode == 'ranking' ? 'Classement' : 'Match' }}</span>
+              </div>
+              <dl class="member-activity-stats">
+                <div><dt>Sessions</dt><dd>{{ item.sessions_count }}</dd></div>
+                <div><dt>Scores</dt><dd>{{ item.total_score|number_format(0, ',', ' ') }}</dd></div>
+                <div><dt>Moyenne</dt><dd>{{ item.score_entries_count > 0 ? item.average_score|number_format(1, ',', ' ') : '—' }}</dd></div>
+                <div><dt>Bilan</dt><dd>{{ item.wins }}V · {{ item.draws }}N · {{ item.losses }}D</dd></div>
+                {% if item.context_mode != 'ranking' %}
+                  <div>
+                    <dt>MMR</dt>
+                    <dd>{{ item.mmr is not null ? item.mmr ~ ' (' ~ (item.mmr_delta > 0 ? '+' : '') ~ item.mmr_delta ~ ')' : '—' }}</dd>
+                  </div>
+                {% endif %}
+              </dl>
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="member-profile-panel">
+      <div class="member-profile-panel-head">
+        <h2>Historique des sessions</h2>
+        <span>{{ sessionSummaries|length }} session{{ sessionSummaries|length > 1 ? 's' : '' }}</span>
+      </div>
+
+      {% if sessionSummaries|length == 0 %}
+        <div class="member-empty">
+          <p>Aucune participation enregistrée.</p>
+        </div>
+      {% else %}
+        <ol class="member-timeline">
+          {% for item in sessionSummaries %}
+            {% set timelineMeta = activity_meta(item.activity.name, item.activity.contextMode.value) %}
+            <li>
+              <article class="member-timeline-card">
+                <div class="member-timeline-top">
+                  <p class="member-timeline-date">{{ item.session.playedAt|date('d/m/Y H:i') }}</p>
+                  <span class="activity-mini-badge" style="--activity-accent: {{ timelineMeta.accent }}; --activity-background: {{ timelineMeta.background }}; --activity-foreground: {{ timelineMeta.foreground }};">
+                    {% if timelineMeta.iconUrl %}
+                      <img src="{{ timelineMeta.iconUrl }}" alt="{{ timelineMeta.iconAlt }}" loading="lazy">
+                    {% else %}
+                      <span>{{ timelineMeta.shortLabel }}</span>
+                    {% endif %}
+                    {{ item.activity.name }}
+                  </span>
+                </div>
+                <h3>
+                  {% if item.session.title %}
+                    {{ item.session.title }}
+                  {% else %}
+                    Session {{ item.activity.name }} du {{ item.session.playedAt|date('d/m/Y') }}
+                  {% endif %}
+                </h3>
+                <p class="session-meta">{{ item.headline }}</p>
+
+                <div class="session-entries">
+                  <h4>Participations</h4>
+                  <ul>
+                    {% for participation in item.items %}
+                      <li>
+                        <span class="member-entry-badge kind-{{ participation.kind|lower }}">{{ participation.badge }}</span>
+                        <div>
+                          <strong>{{ participation.label }}</strong>
+                          <p class="member-entry-meta">{{ participation.value }} · {{ participation.meta }}</p>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+
+                <a href="{{ path('session_show', { groupId: group.id, sessionId: item.session.id }) }}">Voir la session complète</a>
+              </article>
+            </li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+    </section>
+  </section>
 {% endblock %}

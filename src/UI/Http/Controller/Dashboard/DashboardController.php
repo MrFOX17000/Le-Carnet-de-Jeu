@@ -27,6 +27,10 @@ final class DashboardController extends AbstractController
         $query = new GetDashboardDataQuery($user->getId());
         $result = $this->getDashboardDataHandler->handle($query);
 
+        $groups = $result->getGroups();
+        $recentSessions = $result->getRecentSessions();
+        $pendingInvites = $result->getPendingInvites();
+
         // Build roles map for easier template access
         $groupRoles = [];
         foreach ($result->getGroups() as $group) {
@@ -36,14 +40,23 @@ final class DashboardController extends AbstractController
             }
         }
 
+        $dashboardOverview = [
+            'groupCount' => $groups->count(),
+            'recentSessionsCount' => $recentSessions->count(),
+            'pendingInvitesCount' => $pendingInvites->count(),
+            'hasAnyStat' => !empty($result->getDashboardStats()) || !empty($result->getMemberStats()) || !empty($result->getActivityStats()),
+        ];
+
         return $this->render('dashboard/index.html.twig', [
-            'groups' => $result->getGroups(),
+            'displayName' => $user->getDisplayName() ?: $user->getEmail(),
+            'groups' => $groups,
             'groupRoles' => $groupRoles,
-            'recentSessions' => $result->getRecentSessions(),
-            'pendingInvites' => $result->getPendingInvites(),
+            'recentSessions' => $recentSessions,
+            'pendingInvites' => $pendingInvites,
             'memberStats' => $result->getMemberStats(),
             'activityStats' => $result->getActivityStats(),
             'dashboardStats' => $result->getDashboardStats(),
+            'dashboardOverview' => $dashboardOverview,
         ]);
     }
 }

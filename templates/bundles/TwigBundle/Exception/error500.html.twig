@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Erreur serveur{% endblock %}
+
+{% block body %}
+<section class="error-page">
+    <div class="error-card">
+        <div class="error-code">500</div>
+        <h1 class="error-title">Erreur interne</h1>
+        <p class="error-message">
+            Une erreur inattendue s'est produite. Notre équipe a été prévenue.
+        </p>
+        <p class="error-description">
+            Rechargez la page ou revenez dans quelques instants.
+            Si le problème persiste, <a href="{{ path('app_home') }}">retournez à l'accueil</a>.
+        </p>
+
+        <nav class="error-nav">
+            <a href="{{ path('app_home') }}" class="btn btn-secondary">Retour à l'accueil</a>
+            {% if app.user %}
+                <a href="{{ path('dashboard') }}" class="btn btn-primary">Mon dashboard</a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="btn btn-primary">Se connecter</a>
+            {% endif %}
+        </nav>
+    </div>
+</section>
+{% endblock %}

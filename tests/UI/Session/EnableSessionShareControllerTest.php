@@ -20,7 +20,7 @@ final class EnableSessionShareControllerTest extends DbWebTestCase
 
         // Créer un utilisateur propriétaire
         $owner = new User();
-        $owner->setEmail('owner@test.local');
+        $owner->setEmail('owner-share-allowed@test.local');
         $owner->setPassword('hashed_password');
         $owner->setCreatedAt(new \DateTimeImmutable());
         $owner->setIsVerified(true);
@@ -99,7 +99,7 @@ final class EnableSessionShareControllerTest extends DbWebTestCase
 
         // Créer deux utilisateurs
         $owner = new User();
-        $owner->setEmail('owner@test.local');
+        $owner->setEmail('owner-share-forbidden@test.local');
         $owner->setPassword('hashed_password');
         $owner->setCreatedAt(new \DateTimeImmutable());
         $owner->setIsVerified(true);

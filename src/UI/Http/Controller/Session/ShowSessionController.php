@@ -2,6 +2,7 @@
 
 namespace App\UI\Http\Controller\Session;
 
+use App\Domain\Entry\EntryType;
 use App\Entity\User;
 use App\Repository\SessionRepository;
 use App\Security\Voter\GroupVoter;
@@ -44,9 +45,49 @@ final class ShowSessionController extends AbstractController
         // Vérifier les droits d'accès au groupe
         $this->denyAccessUnlessGranted(GroupVoter::VIEW, $group);
 
+        $canManage = $this->isGranted(GroupVoter::MANAGE, $group);
+
+        // Calcul des statistiques de la session
+        $entries = $session->getEntries();
+        $participantNames = [];
+        $matchCount = 0;
+        $toursCount = 0;
+
+        foreach ($entries as $entry) {
+            if ($entry->getType() === EntryType::MATCH && $entry->getEntryMatch() !== null) {
+                ++$matchCount;
+                $participantNames[$entry->getEntryMatch()->getHomeName()] = true;
+                $participantNames[$entry->getEntryMatch()->getAwayName()] = true;
+            } elseif ($entry->getType() === EntryType::SCORE_SIMPLE) {
+                ++$toursCount;
+                foreach ($entry->getScores() as $score) {
+                    $participantNames[$score->getParticipantName()] = true;
+                }
+            }
+        }
+
+        $modeLabels = [
+            'ranking'          => 'Classement libre',
+            'duel'             => 'Duel 1v1',
+            'duel_equipe'      => 'Match d\'équipes',
+            'groupe_vs_externe' => 'Groupe vs Externe',
+        ];
+        $mode = $session->getActivity()->getContextMode()->value;
+
+        $sessionOverview = [
+            'entriesCount'      => $entries->count(),
+            'participantsCount' => count($participantNames),
+            'matchCount'        => $matchCount,
+            'toursCount'        => $toursCount,
+            'modeLabel'         => $modeLabels[$mode] ?? $mode,
+            'isMatchMode'       => in_array($mode, ['duel', 'duel_equipe', 'groupe_vs_externe'], true),
+        ];
+
         return $this->render('session/show.html.twig', [
-            'session' => $session,
-            'group' => $group,
+            'session'         => $session,
+            'group'           => $group,
+            'canManage'       => $canManage,
+            'sessionOverview' => $sessionOverview,
         ]);
     }
 }

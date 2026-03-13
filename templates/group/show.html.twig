@@ -3,50 +3,385 @@
 {% block title %}{{ group.name }}{% endblock %}
 
 {% block body %}
-	<h1>{{ group.name }}</h1>
+<section class="group-detail-page">
+	<header class="group-detail-header">
+		<div>
+			<p class="group-detail-kicker">Groupe</p>
+			<h1>{{ group.name }}</h1>
+			<p class="group-detail-meta">Créé le {{ group.createdAt ? group.createdAt|date('d/m/Y H:i') : '-' }} par {{ group.createdBy ? group.createdBy.email : '-' }}</p>
+			{% if canManage %}
+				<div class="group-onboarding-steps" role="note" aria-label="Parcours recommandé">
+					<p><strong>Parcours simple :</strong> 1) Créer une activité → 2) Créer une session → 3) Ajouter des résultats.</p>
+					<div class="group-onboarding-actions">
+						<a class="btn btn-secondary btn-sm" href="{{ path('activity_create', {id: group.id}) }}">Étape 1 : Créer une activité</a>
+						<a class="btn btn-secondary btn-sm" href="{{ path('session_create', {id: group.id}) }}">Étape 2 : Créer une session</a>
+					</div>
+				</div>
+			{% endif %}
+		</div>
+		<div class="group-detail-actions">
+			{% if canManage %}
+				<a class="btn btn-primary" href="{{ path('activity_create', {id: group.id}) }}">Créer une activité</a>
+				<a class="btn btn-primary" href="{{ path('session_create', {id: group.id}) }}">Créer une session</a>
+				<a class="btn btn-secondary" href="{{ path('invite_create', {id: group.id}) }}">Inviter un membre</a>
+				<form method="post" action="{{ path('group_delete', {id: group.id}) }}" onsubmit="return confirm('Supprimer ce groupe et toutes ses sessions ?');">
+					<input type="hidden" name="_token" value="{{ csrf_token('delete-group-' ~ group.id) }}">
+					<button type="submit" class="btn btn-outline-danger">Supprimer le groupe</button>
+				</form>
+			{% endif %}
+			<a class="btn btn-secondary" href="{{ path('group_seasons', {id: group.id}) }}">Archives des saisons</a>
+			<a class="btn btn-secondary" href="{{ path('group_index') }}">Retour à la liste</a>
+		</div>
+	</header>
 
-	<dl>
-		<dt>ID</dt>
-		<dd>{{ group.id }}</dd>
+	<section class="group-overview-panel">
+		<h2>Vue d'ensemble du groupe</h2>
+		<div class="group-overview-grid">
+			<article class="group-overview-card">
+				<p>Membres</p>
+				<strong>{{ groupOverview.membersCount }}</strong>
+			</article>
+			<article class="group-overview-card">
+				<p>Activités</p>
+				<strong>{{ groupOverview.activitiesCount }}</strong>
+			</article>
+			<article class="group-overview-card">
+				<p>Sessions</p>
+				<strong>{{ groupOverview.sessionsCount }}</strong>
+			</article>
+			<article class="group-overview-card">
+				<p>Invitations en attente</p>
+				<strong>{{ groupOverview.pendingInvitesCount }}</strong>
+			</article>
+		</div>
+		<p class="group-overview-meta">
+			{% if groupOverview.lastPlayedAt %}
+				Dernière session jouée le {{ groupOverview.lastPlayedAt|date('d/m/Y H:i') }}.
+			{% else %}
+				Aucune session jouée pour le moment.
+			{% endif %}
+			{% if groupOverview.topActivityName %}
+				Activité la plus jouée : <strong>{{ groupOverview.topActivityName }}</strong> ({{ groupOverview.topActivitySessions }} session{{ groupOverview.topActivitySessions > 1 ? 's' : '' }}).
+			{% endif %}
+		</p>
+		{% if groupOverview.nextStep %}
+			<div class="group-overview-next-step">
+				<p>Prochaine action recommandée : <strong>{{ groupOverview.nextStep.label }}</strong></p>
+				<a class="btn btn-secondary btn-sm" href="{{ path(groupOverview.nextStep.route, groupOverview.nextStep.params) }}">Continuer</a>
+			</div>
+		{% endif %}
+	</section>
 
-		<dt>Cree le</dt>
-		<dd>{{ group.createdAt ? group.createdAt|date('d/m/Y H:i') : '-' }}</dd>
+	<div class="group-detail-layout">
+		<div>
+			<h2>Timeline des sessions</h2>
 
-		<dt>Cree par</dt>
-		<dd>{{ group.createdBy ? group.createdBy.email : '-' }}</dd>
+			{% if sessions is empty %}
+				<div class="group-empty-timeline">
+					<p>Aucune session pour ce groupe.</p>
+					{% if canManage %}
+						<p class="text-muted">Commence par créer une activité, puis une session.</p>
+						<a class="btn btn-secondary" href="{{ path('activity_create', {id: group.id}) }}">Créer la première activité</a>
+						<a class="btn btn-secondary" href="{{ path('session_create', {id: group.id}) }}">Démarrer la première session</a>
+					{% endif %}
+				</div>
+			{% else %}
+				<div class="group-session-tools">
+					<div class="group-session-filter-field">
+						<label for="group-session-search">Rechercher dans l'historique</label>
+						<input type="search" id="group-session-search" placeholder="Titre, activité, date...">
+					</div>
+					<div class="group-session-filter-field">
+						<label for="group-session-activity">Filtrer par activité</label>
+						<select id="group-session-activity">
+							<option value="">Toutes les activités</option>
+							{% for activityName in activityFilters %}
+								<option value="{{ activityName|lower }}">{{ activityName }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="group-session-filter-actions">
+						<button type="button" class="btn btn-secondary btn-sm" id="group-session-reset">Réinitialiser les filtres</button>
+					</div>
+					<p class="group-session-tools-note">Les 8 sessions les plus récentes restent visibles. L'historique plus ancien est replié pour garder la page lisible.</p>
+				</div>
 
-		<dt>Nombre de membres</dt>
-		<dd>{{ group.groupMembers|length }}</dd>
-	</dl>
+				<section class="group-session-section" data-session-section>
+					<div class="group-session-section-head">
+						<h3>Sessions récentes</h3>
+						<span>{{ recentSessions|length }} session{{ recentSessions|length > 1 ? 's' : '' }}</span>
+					</div>
+					<ol class="group-timeline">
+						{% for session in recentSessions %}
+							{% set recentSessionMeta = activity_meta(session.activity.name, session.activity.contextMode.value) %}
+							<li class="group-timeline-item" data-session-item data-session-activity="{{ (session.activity.name ?? 'Sans activité')|lower }}" data-session-search="{{ ((session.title ?: 'Session ' ~ session.activity.name ~ ' du ' ~ session.playedAt|date('d/m/Y')) ~ ' ' ~ (session.activity.name ?? 'Sans activité') ~ ' ' ~ session.playedAt|date('d/m/Y H:i'))|lower }}">
+								<div class="timeline-dot" aria-hidden="true"></div>
+								<article class="timeline-card">
+									<div class="timeline-card-top">
+										<p class="timeline-date">{{ session.playedAt|date('d/m/Y H:i') }}</p>
+										<span class="timeline-badge">{{ session.entries|length }} entr{{ session.entries|length > 1 ? 'ées' : 'ée' }}</span>
+									</div>
+									<p class="sr-only">Entries: {{ session.entries|length }}</p>
+									<h3>
+										<a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
+											{% if session.title %}
+												{{ session.title }}
+											{% else %}
+												Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+											{% endif %}
+										</a>
+									</h3>
+									<p class="timeline-activity">Activité : <a href="{{ path('activity_show', { groupId: group.id, activityId: session.activity.id }) }}" class="group-inline-activity"><span class="activity-mini-badge" style="--activity-accent: {{ recentSessionMeta.accent }}; --activity-background: {{ recentSessionMeta.background }}; --activity-foreground: {{ recentSessionMeta.foreground }};">{% if recentSessionMeta.iconUrl %}<img src="{{ recentSessionMeta.iconUrl }}" alt="{{ recentSessionMeta.iconAlt }}" loading="lazy">{% else %}<span>{{ recentSessionMeta.shortLabel }}</span>{% endif %}{{ session.activity.name }}</span></a></p>
+									<div class="timeline-actions">
+										<a class="btn btn-secondary btn-sm" href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">Voir la session</a>
+										{% if canManage %}
+											<a class="btn btn-secondary btn-sm" href="{{ path('session_edit', { groupId: group.id, sessionId: session.id }) }}">Modifier</a>
+											{% if session.activity.contextMode.value == 'ranking' %}
+												<a class="btn btn-secondary btn-sm" href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter un tour</a>
+											{% else %}
+												<a class="btn btn-secondary btn-sm" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
+											{% endif %}
+										{% endif %}
+									</div>
+								</article>
+							</li>
+						{% endfor %}
+					</ol>
+					<p class="group-session-empty-results" data-empty-results hidden>Aucune session ne correspond aux filtres actuels.</p>
+				</section>
 
-	<h2>Timeline des sessions</h2>
+				{% if archivedSessions is not empty %}
+					<details class="group-history-panel" data-history-panel>
+						<summary>Voir l'historique complet ({{ archivedSessions|length }} session{{ archivedSessions|length > 1 ? 's' : '' }})</summary>
+						<section class="group-session-section" data-session-section>
+							<ol class="group-timeline group-timeline-archive">
+								{% for session in archivedSessions %}
+									{% set archivedSessionMeta = activity_meta(session.activity.name, session.activity.contextMode.value) %}
+									<li class="group-timeline-item" data-session-item data-session-activity="{{ (session.activity.name ?? 'Sans activité')|lower }}" data-session-search="{{ ((session.title ?: 'Session ' ~ session.activity.name ~ ' du ' ~ session.playedAt|date('d/m/Y')) ~ ' ' ~ (session.activity.name ?? 'Sans activité') ~ ' ' ~ session.playedAt|date('d/m/Y H:i'))|lower }}">
+										<div class="timeline-dot" aria-hidden="true"></div>
+										<article class="timeline-card">
+											<div class="timeline-card-top">
+												<p class="timeline-date">{{ session.playedAt|date('d/m/Y H:i') }}</p>
+												<span class="timeline-badge">{{ session.entries|length }} entr{{ session.entries|length > 1 ? 'ées' : 'ée' }}</span>
+											</div>
+											<p class="sr-only">Entries: {{ session.entries|length }}</p>
+											<h3>
+												<a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
+													{% if session.title %}
+														{{ session.title }}
+													{% else %}
+														Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+													{% endif %}
+												</a>
+											</h3>
+											<p class="timeline-activity">Activité : <a href="{{ path('activity_show', { groupId: group.id, activityId: session.activity.id }) }}" class="group-inline-activity"><span class="activity-mini-badge" style="--activity-accent: {{ archivedSessionMeta.accent }}; --activity-background: {{ archivedSessionMeta.background }}; --activity-foreground: {{ archivedSessionMeta.foreground }};">{% if archivedSessionMeta.iconUrl %}<img src="{{ archivedSessionMeta.iconUrl }}" alt="{{ archivedSessionMeta.iconAlt }}" loading="lazy">{% else %}<span>{{ archivedSessionMeta.shortLabel }}</span>{% endif %}{{ session.activity.name }}</span></a></p>
+											<div class="timeline-actions">
+												<a class="btn btn-secondary btn-sm" href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">Voir la session</a>
+												{% if canManage %}
+													<a class="btn btn-secondary btn-sm" href="{{ path('session_edit', { groupId: group.id, sessionId: session.id }) }}">Modifier</a>
+													{% if session.activity.contextMode.value == 'ranking' %}
+														<a class="btn btn-secondary btn-sm" href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter un tour</a>
+													{% else %}
+														<a class="btn btn-secondary btn-sm" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
+													{% endif %}
+												{% endif %}
+											</div>
+										</article>
+									</li>
+								{% endfor %}
+							</ol>
+							<p class="group-session-empty-results" data-empty-results hidden>Aucune session ne correspond aux filtres actuels.</p>
+						</section>
+					</details>
+				{% endif %}
+			{% endif %}
+		</div>
 
-	{% if sessions is empty %}
-		<p>Aucune session pour ce groupe.</p>
-	{% else %}
-		<ul>
-			{% for session in sessions %}
-				<li>
-					<p>
-						<a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">
-							{% if session.title %}
-								{{ session.title }}
-							{% else %}
-								Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
-							{% endif %}
-						</a>
-					</p>
-					<ul>
-						<li>Activité: {{ session.activity.name }}</li>
-						<li>Date jouée: {{ session.playedAt|date('d/m/Y H:i') }}</li>
-						<li>Entries: {{ session.entries|length }}</li>
-					</ul>
-				</li>
-			{% endfor %}
-		</ul>
-	{% endif %}
+		<aside class="group-members-sidebar">
+			<h2>Membres ({{ group.groupMembers|length }})</h2>
+			{% if canManage %}
+				<p class="group-detail-meta">Les invitations permettent de rejoindre le groupe avec un vrai accès membre. Le partage public des sessions reste séparé et toujours en lecture seule.</p>
 
-	<p>
-		<a href="{{ path('group_index') }}">Retour a la liste</a>
-	</p>
+				<div class="group-invites-panel">
+					<div class="group-invites-head">
+						<h3>Invitations en attente</h3>
+						<a class="btn btn-secondary btn-sm" href="{{ path('invite_create', {id: group.id}) }}">Nouvelle invitation</a>
+					</div>
+
+					{% if pendingInvites is empty %}
+						<p class="group-invite-empty">Aucune invitation active pour le moment.</p>
+					{% else %}
+						<div class="group-invite-list">
+							{% for invite in pendingInvites %}
+								<article class="group-invite-card">
+									<div class="group-invite-meta">
+										<p class="group-invite-email">{{ invite.email }}</p>
+										<p class="group-invite-details">Rôle : {{ invite.role.value|upper }} · Expire le {{ invite.expiresAt|date('d/m/Y H:i') }}</p>
+									</div>
+									<div class="group-invite-link-row">
+										<input type="text" id="invite-link-{{ invite.id }}" value="{{ absolute_url(path('invite_accept', { token: invite.token })) }}" readonly>
+										<button type="button" class="btn btn-secondary btn-sm" onclick="copyInviteLink('invite-link-{{ invite.id }}')">Copier</button>
+										<span id="invite-copy-feedback-{{ invite.id }}" class="copy-feedback" role="status" aria-live="polite"></span>
+									</div>
+									<div class="group-invite-actions">
+										<form method="post" action="{{ path('invite_resend', { groupId: group.id, inviteId: invite.id }) }}" class="group-invite-resend-form">
+											<input type="hidden" name="_token" value="{{ csrf_token('resend-invite-' ~ invite.id) }}">
+											<button type="submit" class="btn btn-secondary btn-sm">Renvoyer une invitation</button>
+										</form>
+										<form method="post" action="{{ path('invite_revoke', { groupId: group.id, inviteId: invite.id }) }}" class="group-invite-revoke-form" onsubmit="return confirm('Révoquer cette invitation ?');">
+											<input type="hidden" name="_token" value="{{ csrf_token('revoke-invite-' ~ invite.id) }}">
+											<button type="submit" class="btn btn-outline-danger btn-sm">Révoquer</button>
+										</form>
+									</div>
+								</article>
+							{% endfor %}
+						</div>
+					{% endif %}
+
+					<div class="group-invites-history">
+						<h3>Historique des invitations</h3>
+						{% if pastInvites is empty %}
+							<p class="group-invite-empty">Aucune invitation acceptée ou expirée pour le moment.</p>
+						{% else %}
+							<div class="group-invite-list">
+								{% for invite in pastInvites %}
+									<article class="group-invite-card is-history">
+										<div class="group-invite-meta">
+											<p class="group-invite-email">{{ invite.email }}</p>
+											<p class="group-invite-details">
+												Rôle : {{ invite.role.value|upper }} ·
+												{% if invite.acceptedAt %}
+													<span class="group-invite-status accepted">Acceptée le {{ invite.acceptedAt|date('d/m/Y H:i') }}</span>
+												{% else %}
+													<span class="group-invite-status expired">Expirée le {{ invite.expiresAt|date('d/m/Y H:i') }}</span>
+												{% endif %}
+											</p>
+										</div>
+										{% if not invite.acceptedAt %}
+											<form method="post" action="{{ path('invite_resend', { groupId: group.id, inviteId: invite.id }) }}" class="group-invite-resend-form">
+												<input type="hidden" name="_token" value="{{ csrf_token('resend-invite-' ~ invite.id) }}">
+												<button type="submit" class="btn btn-secondary btn-sm">Créer un nouveau lien</button>
+											</form>
+										{% endif %}
+									</article>
+								{% endfor %}
+							</div>
+						{% endif %}
+					</div>
+				</div>
+			{% endif %}
+			<ul class="member-list">
+				{% for member in group.groupMembers %}
+					{% set localPart = member.user.email|split('@')|first %}
+					{% set initials = localPart|slice(0, 2)|upper %}
+					<li class="member-item">
+						<span class="member-avatar">{{ initials }}</span>
+						<div>
+							<p class="member-name"><a href="{{ path('member_profile', { groupId: group.id, userId: member.user.id }) }}">{{ member.user.displayName ?: member.user.email }}</a></p>
+							<p class="member-role">{{ member.role.value|upper }}</p>
+						</div>
+					</li>
+				{% endfor %}
+			</ul>
+		</aside>
+	</div>
+
+	<script>
+		let inviteFeedbackTimeout;
+
+		function showInviteFeedback(inviteId, message) {
+			const feedback = document.getElementById('invite-copy-feedback-' + inviteId);
+			if (!feedback) {
+				return;
+			}
+
+			feedback.textContent = message;
+			window.clearTimeout(inviteFeedbackTimeout);
+			inviteFeedbackTimeout = window.setTimeout(() => {
+				feedback.textContent = '';
+			}, 1800);
+		}
+
+		function copyInviteLink(inputId) {
+			const link = document.getElementById(inputId);
+			if (!link) {
+				return;
+			}
+
+			const inviteId = inputId.replace('invite-link-', '');
+
+			if (navigator.clipboard && window.isSecureContext) {
+				navigator.clipboard.writeText(link.value)
+					.then(() => showInviteFeedback(inviteId, 'Lien copié'))
+					.catch(() => showInviteFeedback(inviteId, 'Copie impossible'));
+				return;
+			}
+
+			link.select();
+			const copied = document.execCommand('copy');
+			showInviteFeedback(inviteId, copied ? 'Lien copié' : 'Copie impossible');
+		}
+
+		(function () {
+			const searchInput = document.getElementById('group-session-search');
+			const activityFilter = document.getElementById('group-session-activity');
+			const resetButton = document.getElementById('group-session-reset');
+			const sections = Array.from(document.querySelectorAll('[data-session-section]'));
+			const historyPanel = document.querySelector('[data-history-panel]');
+
+			if (!searchInput || !activityFilter || sections.length === 0) {
+				return;
+			}
+
+			const normalize = (value) => value.trim().toLowerCase();
+
+			const applyFilters = () => {
+				const searchValue = normalize(searchInput.value);
+				const activityValue = normalize(activityFilter.value);
+				let hasArchivedMatch = false;
+
+				sections.forEach((section, index) => {
+					const items = Array.from(section.querySelectorAll('[data-session-item]'));
+					const emptyState = section.querySelector('[data-empty-results]');
+					let visibleCount = 0;
+
+					items.forEach((item) => {
+						const haystack = item.dataset.sessionSearch || '';
+						const activity = item.dataset.sessionActivity || '';
+						const matchesSearch = searchValue === '' || haystack.includes(searchValue);
+						const matchesActivity = activityValue === '' || activity === activityValue;
+						const visible = matchesSearch && matchesActivity;
+
+						item.hidden = !visible;
+						if (visible) {
+							visibleCount += 1;
+							if (index > 0) {
+								hasArchivedMatch = true;
+							}
+						}
+					});
+
+					if (emptyState) {
+						emptyState.hidden = visibleCount !== 0;
+					}
+				});
+
+				if (historyPanel && (searchValue !== '' || activityValue !== '')) {
+					historyPanel.open = hasArchivedMatch;
+				}
+			};
+
+			searchInput.addEventListener('input', applyFilters);
+			activityFilter.addEventListener('change', applyFilters);
+			if (resetButton) {
+				resetButton.addEventListener('click', () => {
+					searchInput.value = '';
+					activityFilter.value = '';
+					applyFilters();
+					searchInput.focus();
+				});
+			}
+		})();
+	</script>
+</section>
 {% endblock %}

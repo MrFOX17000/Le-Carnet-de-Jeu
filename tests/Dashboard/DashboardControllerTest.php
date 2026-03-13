@@ -280,5 +280,11 @@ final class DashboardControllerTest extends DbWebTestCase
         self::assertStringContainsString('Dashboard enrichi', $content);
         self::assertStringContainsString('Sessions cette semaine', $content);
         self::assertStringContainsString('Groupe le plus actif', $content);
+        self::assertStringContainsString('Hall of Fame de saison', $content);
+        self::assertStringContainsString('Top 1', $content);
+        self::assertStringContainsString('Alice', $content);
+        self::assertStringContainsString('Records de l\'activité favorite', $content);
+        self::assertStringContainsString('Leader cumulé', $content);
+        self::assertStringContainsString('Record de score', $content);
     }
 }

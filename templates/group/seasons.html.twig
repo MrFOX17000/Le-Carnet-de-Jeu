@@ -1,0 +1,208 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Archives des saisons - {{ group.name }}{% endblock %}
+
+{% block body %}
+<section class="season-archives-page">
+  <header class="season-archives-header">
+    <div>
+      <p class="season-archives-kicker">Archives</p>
+      <h1>Archives des saisons</h1>
+      <p class="season-archives-subtitle">{{ group.name }} · champions, podiums et records par activité</p>
+    </div>
+    <div class="season-archives-actions">
+      <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+    </div>
+  </header>
+
+  {% if archives is empty %}
+    <div class="season-archives-empty">
+      <p>Aucune saison archivable pour le moment.</p>
+      <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Voir la timeline</a>
+    </div>
+  {% else %}
+    {% if seasonOptions|length > 1 %}
+      <form method="get" class="season-archives-compare-form">
+        <div class="season-archives-compare-field">
+          <label for="season-current">Saison A</label>
+          <select id="season-current" name="season">
+            {% for key, label in seasonOptions %}
+              <option value="{{ key }}" {{ key == selectedSeason ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="season-archives-compare-field">
+          <label for="season-compare">Saison B</label>
+          <select id="season-compare" name="compare">
+            {% for key, label in seasonOptions %}
+              <option value="{{ key }}" {{ key == compareSeason ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Comparer</button>
+      </form>
+    {% endif %}
+
+    {% if comparisonView %}
+      <section class="season-archives-compare-panel">
+        <div class="season-archive-head">
+          <div>
+            <h2>Comparaison libre</h2>
+            <p>{{ comparisonView.currentSeasonLabel }} vs {{ comparisonView.compareSeasonLabel }}</p>
+          </div>
+        </div>
+
+        <div class="season-archive-summary-deltas">
+          <article class="season-archive-delta-card">
+            <p>Volume</p>
+            <strong>{{ comparisonView.sessionsDelta > 0 ? '+' : '' }}{{ comparisonView.sessionsDelta }}</strong>
+            <span>écart entre saisons</span>
+          </article>
+          <article class="season-archive-delta-card">
+            <p>Participants</p>
+            <strong>{{ comparisonView.participantsDelta > 0 ? '+' : '' }}{{ comparisonView.participantsDelta }}</strong>
+            <span>écart entre saisons</span>
+          </article>
+          <article class="season-archive-delta-card">
+            <p>Activités</p>
+            <strong>{{ comparisonView.activitiesDelta > 0 ? '+' : '' }}{{ comparisonView.activitiesDelta }}</strong>
+            <span>écart entre saisons</span>
+          </article>
+        </div>
+
+        <div class="season-archives-compare-grid">
+          {% for item in comparisonView.activityComparisons %}
+            {% set comparisonMeta = activity_meta(item.activityName, item.contextMode) %}
+            <article class="season-archive-compare-card">
+              <div class="season-archive-block-head">
+                <h4><span class="activity-mini-badge" style="--activity-accent: {{ comparisonMeta.accent }}; --activity-background: {{ comparisonMeta.background }}; --activity-foreground: {{ comparisonMeta.foreground }};">{% if comparisonMeta.iconUrl %}<img src="{{ comparisonMeta.iconUrl }}" alt="{{ comparisonMeta.iconAlt }}" loading="lazy">{% else %}<span>{{ comparisonMeta.shortLabel }}</span>{% endif %}{{ item.activityName }}</span></h4>
+                <span>{{ item.contextMode == 'ranking' ? 'Classement' : 'Match' }}</span>
+              </div>
+              <p class="season-archive-comparison-note">
+                Leader {{ item.leaderChanged ? 'changé' : 'stable' }}
+                {% if item.currentLeader or item.compareLeader %}
+                  · {{ item.compareLeader ?: '—' }} → {{ item.currentLeader ?: '—' }}
+                {% endif %}
+              </p>
+              <p class="season-archive-comparison-note">
+                Sessions: {{ item.compareSessions }} → {{ item.currentSessions }}
+                · {{ item.sessionsDelta > 0 ? '+' : '' }}{{ item.sessionsDelta }}
+              </p>
+              <p class="season-archive-comparison-note">
+                {{ item.metricLabel }} : {{ item.metricDelta > 0 ? '+' : '' }}{{ item.metricDelta }}
+              </p>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <nav class="season-archives-nav" aria-label="Navigation saisons">
+      {% for season in archives %}
+        <a href="#{{ season.seasonKey }}">{{ season.seasonLabel }}</a>
+      {% endfor %}
+    </nav>
+
+    <div class="season-archives-list">
+      {% for season in archives %}
+        <section id="{{ season.seasonKey }}" class="season-archive-card">
+          <div class="season-archive-head">
+            <div>
+              <h2>{{ season.seasonLabel }}</h2>
+              <p>{{ season.sessionsCount }} session{{ season.sessionsCount > 1 ? 's' : '' }} · {{ season.activitiesCount }} activité{{ season.activitiesCount > 1 ? 's' : '' }} · {{ season.participantsCount }} participant{{ season.participantsCount > 1 ? 's' : '' }}</p>
+            </div>
+          </div>
+
+          {% if season.comparison %}
+            <div class="season-archive-summary-deltas">
+              <article class="season-archive-delta-card">
+                <p>Volume</p>
+                <strong>{{ season.comparison.sessionsDelta > 0 ? '+' : '' }}{{ season.comparison.sessionsDelta }}</strong>
+                <span>{{ season.comparison.label }}</span>
+              </article>
+              <article class="season-archive-delta-card">
+                <p>Participants</p>
+                <strong>{{ season.comparison.participantsDelta > 0 ? '+' : '' }}{{ season.comparison.participantsDelta }}</strong>
+                <span>{{ season.comparison.label }}</span>
+              </article>
+              <article class="season-archive-delta-card">
+                <p>Activités</p>
+                <strong>{{ season.comparison.activitiesDelta > 0 ? '+' : '' }}{{ season.comparison.activitiesDelta }}</strong>
+                <span>{{ season.comparison.label }}</span>
+              </article>
+            </div>
+          {% endif %}
+
+          <div class="season-archive-activities">
+            {% for activity in season.activities %}
+              {% set seasonActivityMeta = activity_meta(activity.activityName, activity.contextMode) %}
+              <article class="season-archive-activity-card">
+                <div class="season-archive-activity-head">
+                  <div>
+                    <h3><a href="{{ path('activity_show', { groupId: group.id, activityId: activity.activityId }) }}?season={{ season.seasonKey }}"><span class="activity-mini-badge" style="--activity-accent: {{ seasonActivityMeta.accent }}; --activity-background: {{ seasonActivityMeta.background }}; --activity-foreground: {{ seasonActivityMeta.foreground }};">{% if seasonActivityMeta.iconUrl %}<img src="{{ seasonActivityMeta.iconUrl }}" alt="{{ seasonActivityMeta.iconAlt }}" loading="lazy">{% else %}<span>{{ seasonActivityMeta.shortLabel }}</span>{% endif %}{{ activity.activityName }}</span></a></h3>
+                    <p>{{ activity.sessionsCount }} session{{ activity.sessionsCount > 1 ? 's' : '' }} · {{ activity.contextMode == 'ranking' ? 'Classement' : 'Match' }}</p>
+                  </div>
+                  <a class="btn btn-secondary btn-sm" href="{{ path('activity_show', { groupId: group.id, activityId: activity.activityId }) }}?season={{ season.seasonKey }}">Voir le tracker</a>
+                </div>
+
+                <div class="season-archive-columns">
+                  <div class="season-archive-block">
+                    <div class="season-archive-block-head">
+                      <h4>Podium</h4>
+                      <span>{{ activity.leaderboard|length }} top</span>
+                    </div>
+                    {% if activity.leaderboard is empty %}
+                      <p class="text-muted">Aucune donnée exploitable.</p>
+                    {% else %}
+                      <ol class="season-archive-podium">
+                        {% for row in activity.leaderboard %}
+                          <li>
+                            <span class="activity-tracker-rank">{{ loop.index }}</span>
+                            <strong>{{ row.label }}</strong>
+                            {% if activity.contextMode == 'ranking' %}
+                              <span>{{ row.pointsTotal|number_format(0, ',', ' ') }} pts · {{ row.entriesCount }} entrée{{ row.entriesCount > 1 ? 's' : '' }}</span>
+                            {% else %}
+                              <span>{{ row.wins }}V · {{ row.draws }}N · {{ row.losses }}D</span>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ol>
+                    {% endif %}
+
+                    {% if activity.comparison %}
+                      <p class="season-archive-comparison-note">
+                        {{ activity.comparison.label }} · leader {{ activity.comparison.leaderChanged == 'oui' ? 'changé' : 'stable' }}
+                        {% if activity.comparison.leaderChanged == 'oui' %}
+                          : {{ activity.comparison.previousLeader }} → {{ activity.comparison.leader }}
+                        {% endif %}
+                        · {{ activity.comparison.sessionsDelta > 0 ? '+' : '' }}{{ activity.comparison.sessionsDelta }} session{{ activity.comparison.sessionsDelta|abs > 1 ? 's' : '' }}
+                        · {{ activity.comparison.metricDelta > 0 ? '+' : '' }}{{ activity.comparison.metricDelta }} {{ activity.comparison.metricLabel }}
+                      </p>
+                    {% endif %}
+                  </div>
+
+                  <div class="season-archive-block">
+                    <div class="season-archive-block-head">
+                      <h4>Records</h4>
+                      <span>Snapshot saisonnier</span>
+                    </div>
+                    <div class="season-archive-records-grid">
+                      {% for record in activity.records %}
+                        <article class="season-archive-record-card">
+                          <p>{{ record.title }}</p>
+                          <strong>{{ record.value }}</strong>
+                          <span>{{ record.meta }}</span>
+                        </article>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

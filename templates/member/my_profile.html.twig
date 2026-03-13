@@ -1,0 +1,251 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block body %}
+  <section class="my-profile-page">
+    <header class="my-profile-header">
+      <div>
+        <p class="my-profile-kicker">Mon compte</p>
+        <h1>{{ userAccount.displayName ?: userAccount.email }}</h1>
+        <p class="my-profile-subtitle">
+          {{ userAccount.email }}
+          · Inscrit le {{ userAccount.createdAt|date('d/m/Y') }}
+          · {{ userAccount.isVerified ? 'Email vérifié' : 'Email non vérifié' }}
+          {% if userAccount.oauthProvider %}
+            · Connexion {{ userAccount.oauthProvider|capitalize }}
+          {% endif %}
+        </p>
+      </div>
+      <div class="my-profile-actions">
+        <a class="btn btn-secondary" href="{{ path('dashboard') }}">Retour au dashboard</a>
+        <a class="btn btn-secondary" href="{{ path('group_index') }}">Mes groupes</a>
+      </div>
+    </header>
+
+    <section>
+      <h2>Vue d'ensemble</h2>
+      <div class="my-profile-stats-grid">
+        <article class="my-profile-stat-card">
+          <p>Groupes rejoints</p>
+          <strong>{{ stats.groupsCount }}</strong>
+        </article>
+        <article class="my-profile-stat-card">
+          <p>Groupes créés</p>
+          <strong>{{ stats.ownedGroupsCount }}</strong>
+        </article>
+        <article class="my-profile-stat-card">
+          <p>Activités créées</p>
+          <strong>{{ stats.activitiesCreatedCount }}</strong>
+        </article>
+        <article class="my-profile-stat-card">
+          <p>Sessions créées</p>
+          <strong>{{ stats.sessionsCreatedCount }}</strong>
+        </article>
+        <article class="my-profile-stat-card">
+          <p>Entrées créées</p>
+          <strong>{{ stats.entriesCreatedCount }}</strong>
+        </article>
+        <article class="my-profile-stat-card">
+          <p>Invitations envoyées</p>
+          <strong>{{ stats.invitesCreatedCount }}</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="my-profile-insights-panel">
+      <div class="my-profile-panel-head">
+        <h2>Pilotage du compte</h2>
+      </div>
+      <div class="my-profile-insights-grid">
+        <article class="my-profile-insight-card">
+          <p>Invitations reçues</p>
+          <strong>{{ profileInsights.pendingInvitesForUserCount }}</strong>
+          <span class="my-profile-insight-meta">en attente de réponse</span>
+        </article>
+        <article class="my-profile-insight-card">
+          <p>Activité sur 30 jours</p>
+          <strong>{{ profileInsights.sessionsLast30Days }}</strong>
+          <span class="my-profile-insight-meta">session{{ profileInsights.sessionsLast30Days > 1 ? 's' : '' }} récente{{ profileInsights.sessionsLast30Days > 1 ? 's' : '' }}</span>
+        </article>
+        <article class="my-profile-insight-card">
+          <p>Profil complété</p>
+          <strong>{{ profileInsights.profileCompletionPercent }}%</strong>
+          <span class="my-profile-insight-meta">nom, vérification, groupes, sessions</span>
+        </article>
+        <article class="my-profile-insight-card">
+          <p>Préparation suppression</p>
+          <strong>{{ profileInsights.deletionChecksCompleted }}/{{ profileInsights.deletionChecksTotal }}</strong>
+          <span class="my-profile-insight-meta">conditions validées</span>
+        </article>
+      </div>
+
+      {% if profileInsights.nextStep %}
+        <div class="my-profile-next-step">
+          <p>Prochaine étape recommandée : <strong>{{ profileInsights.nextStep.label }}</strong></p>
+          <a class="btn btn-primary btn-sm" href="{{ path(profileInsights.nextStep.route, profileInsights.nextStep.params) }}">Continuer</a>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="my-profile-layout">
+
+      {# ── Colonne gauche : paramètres du compte ── #}
+      <div class="my-profile-col">
+
+        <section class="my-profile-panel">
+          <h2>Nom affiché</h2>
+          <form method="post" class="my-profile-form">
+            <input type="hidden" name="profile_action" value="update_display_name">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile-display-update') }}">
+            <div>
+              <label for="display_name">Nom public</label>
+              <input type="text" id="display_name" name="display_name" maxlength="80"
+                     value="{{ userAccount.displayName ?: '' }}"
+                     placeholder="Ex : Mathias, Renard, CapitaineRL…">
+              <p class="text-muted">Affiché dans la nav. Laissez vide pour utiliser l'email.</p>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+          </form>
+        </section>
+
+        <section class="my-profile-panel">
+          <h2>Modifier mon email</h2>
+          <form method="post" class="my-profile-form">
+            <input type="hidden" name="profile_action" value="update_email">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile-email-update') }}">
+            <div>
+              <label for="new_email">Nouvel email</label>
+              <input type="email" id="new_email" name="new_email" required placeholder="prenom@exemple.com">
+            </div>
+            <div>
+              <label for="current_password_for_email">
+                Mot de passe actuel
+                {% if userAccount.oauthProvider %}
+                  <span class="label-optional">optionnel ({{ userAccount.oauthProvider|capitalize }})</span>
+                {% endif %}
+              </label>
+              <input type="password" id="current_password_for_email" name="current_password_for_email" autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Mettre à jour l'email</button>
+          </form>
+        </section>
+
+        <section class="my-profile-panel">
+          <h2>Modifier mon mot de passe</h2>
+          <form method="post" class="my-profile-form">
+            <input type="hidden" name="profile_action" value="update_password">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile-password-update') }}">
+            <div>
+              <label for="current_password">
+                Mot de passe actuel
+                {% if userAccount.oauthProvider %}
+                  <span class="label-optional">optionnel ({{ userAccount.oauthProvider|capitalize }})</span>
+                {% endif %}
+              </label>
+              <input type="password" id="current_password" name="current_password" autocomplete="current-password">
+            </div>
+            <div>
+              <label for="new_password">Nouveau mot de passe</label>
+              <input type="password" id="new_password" name="new_password" minlength="8" required autocomplete="new-password">
+            </div>
+            <div>
+              <label for="confirm_password">Confirmer le nouveau mot de passe</label>
+              <input type="password" id="confirm_password" name="confirm_password" minlength="8" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Mettre à jour le mot de passe</button>
+          </form>
+        </section>
+
+      </div>{# /my-profile-col #}
+
+      {# ── Colonne droite : données du compte ── #}
+      <div class="my-profile-col">
+
+        <section class="my-profile-panel">
+          <div class="my-profile-panel-head">
+            <h2>Mes groupes</h2>
+            <a class="btn btn-secondary btn-sm" href="{{ path('group_create_form') }}">Nouveau groupe</a>
+          </div>
+          {% if groups is empty %}
+            <p class="text-muted">Tu n'as encore rejoint aucun groupe.</p>
+          {% else %}
+            <ul class="my-profile-group-list">
+              {% for group in groups %}
+                <li>
+                  <a href="{{ path('group_show', { id: group.id }) }}">{{ group.name }}</a>
+                  <span class="my-profile-group-meta">
+                    {{ group.createdBy and group.createdBy.id == userAccount.id ? 'Créateur' : 'Membre' }}
+                  </span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </section>
+
+        <section class="my-profile-panel">
+          <h2>Sessions récentes</h2>
+          {% if recentSessions is empty %}
+            <p class="text-muted">Aucune session pour le moment.</p>
+          {% else %}
+            <ol class="my-profile-session-list">
+              {% for session in recentSessions %}
+                <li>
+                  <a href="{{ path('session_show', { groupId: session.group.id, sessionId: session.id }) }}">
+                    {{ session.title ?: 'Session ' ~ session.activity.name }}
+                  </a>
+                  <p class="my-profile-session-meta">
+                    {{ session.group.name }} · {{ session.activity.name }} · {{ session.playedAt|date('d/m/Y H:i') }}
+                  </p>
+                </li>
+              {% endfor %}
+            </ol>
+          {% endif %}
+        </section>
+
+      </div>{# /my-profile-col #}
+
+      {# ── Danger zone : pleine largeur ── #}
+      <section class="my-profile-panel my-profile-panel-danger">
+        <h2>Zone dangereuse</h2>
+        <p class="text-muted">
+          La suppression est permanente et irréversible. Votre compte ne peut être supprimé que si toutes les conditions ci-dessous sont remplies.
+        </p>
+
+        <ul class="my-profile-deletion-checklist">
+          {% for item in deletionBlockers %}
+            <li class="{{ item.ok ? 'ok' : 'blocked' }}">
+              <span class="check-icon">{{ item.ok ? '✓' : '✗' }}</span>
+              {{ item.label }}
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if canDeleteAccount %}
+          <p class="text-muted my-profile-deletion-ready">Votre compte est prêt à être supprimé.</p>
+          <form method="post" class="my-profile-form" onsubmit="return confirm('Confirmer la suppression définitive du compte ?');">
+            <input type="hidden" name="profile_action" value="delete_account">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile-account-delete') }}">
+            <div>
+              <label for="delete_confirmation">Tapez <strong>SUPPRIMER</strong> pour confirmer</label>
+              <input type="text" id="delete_confirmation" name="delete_confirmation" required placeholder="SUPPRIMER" autocomplete="off">
+            </div>
+            <div>
+              <label for="current_password_for_delete">
+                Mot de passe actuel
+                {% if userAccount.oauthProvider %}
+                  <span class="label-optional">optionnel ({{ userAccount.oauthProvider|capitalize }})</span>
+                {% endif %}
+              </label>
+              <input type="password" id="current_password_for_delete" name="current_password_for_delete" autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer mon compte</button>
+          </form>
+        {% else %}
+          <p class="my-profile-deletion-blocked">Nettoyez les éléments marqués ✗ avant de pouvoir supprimer votre compte.</p>
+        {% endif %}
+      </section>
+
+    </div>
+  </section>
+{% endblock %}

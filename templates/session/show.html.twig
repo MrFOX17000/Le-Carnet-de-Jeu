@@ -3,108 +3,195 @@
 {% block title %}Session - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>
-    {% if session.title %}
-      {{ session.title }}
-    {% else %}
-      Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
-    {% endif %}
-  </h1>
-
-  <dl>
-    <dt>Groupe</dt>
-    <dd>{{ group.name }}</dd>
-
-    <dt>Activité</dt>
-    <dd>{{ session.activity.name }}</dd>
-
-    <dt>Titre</dt>
-    <dd>
-      {% if session.title %}
-        {{ session.title }}
-      {% else %}
-        Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
-      {% endif %}
-    </dd>
-
-    <dt>Date jouée</dt>
-    <dd>{{ session.playedAt|date('d/m/Y H:i') }}</dd>
-
-    <dt>Créée le</dt>
-    <dd>{{ session.createdAt|date('d/m/Y H:i') }}</dd>
-
-    <dt>Créée par</dt>
-    <dd>{{ session.createdBy.email }}</dd>
-  </dl>
-
-  <h2>Partage</h2>
-
-  {% if session.unlistedToken %}
-    <div class="share-section">
-      <p>
-        <strong>Lien de partage :</strong>
-      </p>
-      <input type="text" id="share-link" value="{{ absolute_url(path('public_shared_session', { token: session.unlistedToken })) }}" readonly>
-      <button onclick="copyToClipboard()">Copier le lien</button>
+<section class="session-show-page">
+  <header class="session-show-header">
+    <div>
+      <p class="session-show-kicker">Session · {{ group.name }}</p>
+      <h1>
+        {% if session.title %}
+          {{ session.title }}
+        {% else %}
+          Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+        {% endif %}
+      </h1>
+      <p class="session-show-meta">Activité : {{ session.activity.name }} &nbsp;|&nbsp; Jouée le {{ session.playedAt|date('d/m/Y à H:i') }}</p>
     </div>
-  {% else %}
-    <form method="POST" action="{{ path('session_enable_share', { groupId: group.id, sessionId: session.id }) }}">
-      <button type="submit">Activer le partage en lecture seule</button>
-    </form>
-  {% endif %}
+    <div class="session-show-actions">
+      <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">← Retour au groupe</a>
+      {% if canManage %}
+        <a class="btn btn-secondary" href="{{ path('session_edit', { groupId: group.id, sessionId: session.id }) }}">Modifier</a>
 
-  <h2>Entries</h2>
+        {% set mode = session.activity.contextMode.value %}
+        {% if mode == 'ranking' %}
+          <a class="btn btn-primary" title="Classement avec plusieurs participants" href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter un tour</a>
+        {% elseif mode == 'duel' %}
+          <a class="btn btn-primary" title="Duel 1v1 entre deux joueurs identifiés" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un duel</a>
+        {% elseif mode == 'duel_equipe' %}
+          <a class="btn btn-primary" title="Match entre deux équipes de membres" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
+        {% else %}
+          <a class="btn btn-primary" title="Match du groupe contre des adversaires externes" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
+        {% endif %}
 
-  <p>
-    <a href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter un score simple</a>
-    |
-    <a href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter un match</a>
-  </p>
+        <form method="post" action="{{ path('session_delete', { groupId: group.id, sessionId: session.id }) }}" onsubmit="return confirm('Supprimer cette session et toutes ses entrées ?');">
+          <input type="hidden" name="_token" value="{{ csrf_token('delete-session-' ~ session.id) }}">
+          <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+        </form>
+      {% endif %}
+    </div>
+  </header>
 
-  {% if session.entries|length == 0 %}
-    <p>Aucune entry pour cette session.</p>
-  {% else %}
-    <ul>
-      {% for entry in session.entries %}
-        <li>
-          <p>
-            <strong>{{ entry.type.value }}</strong>
-            {% if entry.label %}
-              - {{ entry.label }}
-            {% endif %}
-            ({{ entry.createdAt|date('d/m/Y H:i') }})
-          </p>
+  <div class="session-overview">
+    <div class="session-overview-card">
+      <p class="session-overview-label">Mode de jeu</p>
+      <p class="session-overview-value session-overview-mode">{{ sessionOverview.modeLabel }}</p>
+    </div>
+    <div class="session-overview-card">
+      <p class="session-overview-label">Entrées</p>
+      <p class="session-overview-value">{{ sessionOverview.entriesCount }}</p>
+    </div>
+    <div class="session-overview-card">
+      <p class="session-overview-label">Participants uniques</p>
+      <p class="session-overview-value">{{ sessionOverview.participantsCount > 0 ? sessionOverview.participantsCount : '—' }}</p>
+    </div>
+    <div class="session-overview-card">
+      {% if sessionOverview.isMatchMode %}
+        <p class="session-overview-label">Matchs / Duels</p>
+        <p class="session-overview-value">{{ sessionOverview.matchCount > 0 ? sessionOverview.matchCount : '—' }}</p>
+      {% else %}
+        <p class="session-overview-label">Tours de classement</p>
+        <p class="session-overview-value">{{ sessionOverview.toursCount > 0 ? sessionOverview.toursCount : '—' }}</p>
+      {% endif %}
+    </div>
+  </div>
 
-          {% if entry.type.value == 'match' and entry.entryMatch %}
-            <p>
-              {{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}
-            </p>
-          {% elseif entry.scores|length > 0 %}
-            <ul>
-              {% for score in entry.scores %}
-                <li>{{ score.participantName }}: {{ score.score }}</li>
-              {% endfor %}
-            </ul>
+  <section class="session-share-card">
+    <h2>Partage public</h2>
+    <p>Ce lien sert uniquement à consulter la session. Pour faire rejoindre quelqu'un au groupe, utilisez l'invitation du groupe.</p>
+    {% if canManage %}
+      {% if session.unlistedToken %}
+        <div class="share-ready">
+          <input type="text" id="share-link" value="{{ absolute_url(path('public_shared_session', { token: session.unlistedToken })) }}" readonly>
+          <button type="button" class="btn btn-secondary" onclick="copyToClipboard()">Copier le lien</button>
+          <span id="share-copy-feedback" class="copy-feedback" role="status" aria-live="polite"></span>
+        </div>
+      {% else %}
+        <form method="POST" action="{{ path('session_enable_share', { groupId: group.id, sessionId: session.id }) }}">
+          <button type="submit" class="btn btn-secondary">Activer le partage en lecture seule</button>
+        </form>
+      {% endif %}
+    {% elseif session.unlistedToken %}
+      <div class="share-ready">
+        <input type="text" id="share-link" value="{{ absolute_url(path('public_shared_session', { token: session.unlistedToken })) }}" readonly>
+        <button type="button" class="btn btn-secondary" onclick="copyToClipboard()">Copier le lien</button>
+        <span id="share-copy-feedback" class="copy-feedback" role="status" aria-live="polite"></span>
+      </div>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2 class="session-entries-heading">
+      Entrées
+      {% if sessionOverview.entriesCount > 0 %}
+        <span class="session-entries-count">{{ sessionOverview.entriesCount }}</span>
+      {% endif %}
+    </h2>
+
+    {% if session.entries|length == 0 %}
+      <div class="session-empty-entries">
+        <p>Aucune entrée pour cette session.</p>
+        {% if canManage %}
+          {% set mode = session.activity.contextMode.value %}
+          {% if mode == 'ranking' %}
+            <a class="btn btn-primary" href="{{ path('entry_create', { id: group.id, sessionId: session.id }) }}">Ajouter le premier tour</a>
+          {% else %}
+            <a class="btn btn-primary" href="{{ path('entry_match_create', { id: group.id, sessionId: session.id }) }}">Ajouter le premier résultat</a>
           {% endif %}
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="entries-grid">
+        {% for entry in session.entries %}
+          <article class="entry-card entry-type-{{ entry.type.value }}">
+            <div class="entry-card-head">
+              <p class="entry-type-label">{{ entry.type.value == 'match' ? 'Match' : 'Classement' }}</p>
+              <p class="entry-date">{{ entry.createdAt|date('d/m/Y H:i') }}</p>
+            </div>
 
-          <p>
-            <a href="{{ path('entry_show', { groupId: group.id, sessionId: session.id, entryId: entry.id }) }}">Voir le détail</a>
-          </p>
-        </li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+            {% if entry.label %}
+              <h3>{{ entry.label }}</h3>
+            {% endif %}
 
-  <p>
-    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités du groupe</a>
-  </p>
+            {% if entry.type.value == 'match' and entry.entryMatch %}
+              {% set homeWon = entry.entryMatch.homeScore > entry.entryMatch.awayScore %}
+              {% set awayWon = entry.entryMatch.awayScore > entry.entryMatch.homeScore %}
+              <div class="match-board">
+                <div class="match-side {{ homeWon ? 'winner' : '' }}">
+                  <p class="team-name">{{ entry.entryMatch.homeName }}</p>
+                  <p class="team-score">{{ entry.entryMatch.homeScore }}</p>
+                </div>
+                <p class="match-separator">-</p>
+                <div class="match-side {{ awayWon ? 'winner' : '' }}">
+                  <p class="team-name">{{ entry.entryMatch.awayName }}</p>
+                  <p class="team-score">{{ entry.entryMatch.awayScore }}</p>
+                </div>
+              </div>
+              <p class="legacy-line sr-only">{{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}</p>
+            {% elseif entry.scores|length > 0 %}
+              <ul class="score-list">
+                {% for score in entry.scores %}
+                  <li>
+                    <span>{{ score.participantName }}</span>
+                    <strong>{{ score.score }}</strong>
+                    <span class="sr-only">{{ score.participantName }}: {{ score.score }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            <p>
+              <a href="{{ path('entry_show', { groupId: group.id, sessionId: session.id, entryId: entry.id }) }}">Voir le détail</a>
+            </p>
+
+            {% if canManage %}
+              <form method="post" action="{{ path('entry_delete', { groupId: group.id, sessionId: session.id, entryId: entry.id }) }}" class="entry-delete-form" onsubmit="return confirm('Supprimer cette entrée ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-entry-' ~ entry.id) }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer cette entrée</button>
+              </form>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
 
   <script>
+    let shareFeedbackTimeout;
+
+    function showShareFeedback(message) {
+      const feedback = document.getElementById('share-copy-feedback');
+      if (!feedback) {
+        return;
+      }
+
+      feedback.textContent = message;
+      window.clearTimeout(shareFeedbackTimeout);
+      shareFeedbackTimeout = window.setTimeout(() => {
+        feedback.textContent = '';
+      }, 1800);
+    }
+
     function copyToClipboard() {
       const link = document.getElementById('share-link');
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(link.value)
+          .then(() => showShareFeedback('Lien copié'))
+          .catch(() => showShareFeedback('Copie impossible'));
+        return;
+      }
       link.select();
-      document.execCommand('copy');
-      alert('Lien copié dans le presse-papiers !');
+      const copied = document.execCommand('copy');
+      showShareFeedback(copied ? 'Lien copié' : 'Copie impossible');
     }
   </script>
+</section>
 {% endblock %}

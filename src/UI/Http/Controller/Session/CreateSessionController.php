@@ -32,6 +32,19 @@ final class CreateSessionController extends AbstractController
         $this->denyAccessUnlessGranted(GroupVoter::MANAGE, $group);
 
         $activities = $group->getActivities();
+        $preferredActivityId = 0;
+
+        if ($request->isMethod('GET')) {
+            $requestedActivityId = $request->query->getInt('activity');
+            if ($requestedActivityId > 0) {
+                foreach ($activities as $activity) {
+                    if ($activity->getId() === $requestedActivityId) {
+                        $preferredActivityId = $requestedActivityId;
+                        break;
+                    }
+                }
+            }
+        }
 
         if ($request->isMethod('POST')) {
             $activityId = $request->request->getInt('activityId');
@@ -39,12 +52,12 @@ final class CreateSessionController extends AbstractController
             $playedAtStr = $request->request->getString('playedAt');
 
             if ($activityId === 0) {
-                $this->addFlash('error', 'You must select an activity.');
+                $this->addFlash('error', 'Veuillez sélectionner une activité.');
                 return $this->redirectToRoute('session_create', ['id' => $group->getId()]);
             }
 
             if ($playedAtStr === '') {
-                $this->addFlash('error', 'playedAt is required.');
+                $this->addFlash('error', 'La date de jeu est obligatoire.');
                 return $this->redirectToRoute('session_create', ['id' => $group->getId()]);
             }
 
@@ -61,7 +74,7 @@ final class CreateSessionController extends AbstractController
 
                 $result = $this->handler->handle($command);
 
-                $this->addFlash('success', 'Session created successfully.');
+                $this->addFlash('success', 'Session créée avec succès.');
 
                 return $this->redirectToRoute('session_show', [
                     'groupId' => $group->getId(),
@@ -76,6 +89,7 @@ final class CreateSessionController extends AbstractController
         return $this->render('session/create.html.twig', [
             'group' => $group,
             'activities' => $activities,
+            'preferredActivityId' => $preferredActivityId,
         ]);
     }
 }

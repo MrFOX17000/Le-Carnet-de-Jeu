@@ -49,6 +49,7 @@ final class CreateActivityHandler
         $activity->setName($name);
         $activity->setGroup($group);
         $activity->setCreatedBy($creator);
+        $activity->setContextMode($command->getContextMode());
 
         // Synchroniser les relations
         $group->addActivity($activity);

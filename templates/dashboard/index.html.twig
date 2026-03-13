@@ -1,160 +1,376 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Tableau de bord{% endblock %}
 
 {% block body %}
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-8">Mon Dashboard</h1>
+<div class="dashboard-page">
+<div class="page-header">
+    <div class="container">
+        <div class="page-header-content">
+            <div>
+                <h1 class="page-title">Tableau de bord</h1>
+                <p class="page-subtitle">Bienvenue {{ displayName }}</p>
+            </div>
+            <div class="page-header-actions">
+                <a href="{{ path('group_create_form') }}" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Nouveau groupe
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-    {% if memberStats is not empty or activityStats is not empty or dashboardStats is not empty %}
-        <div class="mb-10">
-            <h2 class="text-xl font-bold mb-4">Stats rapides</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {% if memberStats is not empty %}
-                    <div class="border rounded-lg p-4 bg-white">
-                        <h3 class="font-semibold text-lg mb-2">Stats membre ({{ memberStats.groupName }})</h3>
-                        <ul class="space-y-1 text-sm text-gray-700">
-                            <li>Sessions: <strong>{{ memberStats.sessionsCount }}</strong></li>
-                            <li>Entries: <strong>{{ memberStats.entriesCount }}</strong></li>
-                            <li>Points cumulés: <strong>{{ memberStats.totalPoints|number_format(0, ',', ' ') }}</strong></li>
-                            <li>Matchs joués: <strong>{{ memberStats.matchesPlayed }}</strong></li>
-                            <li>Victoires / Défaites: <strong>{{ memberStats.wins }} / {{ memberStats.losses }}</strong></li>
-                        </ul>
-                        <p class="text-xs text-gray-500 mt-3">Base sur les participants lies aux entries (fallback sur le createur si non renseigne).</p>
+<div class="container">
+    {% set firstGroup = groups is not empty ? groups|first : null %}
+
+    <section class="dashboard-overview">
+        <article class="overview-card">
+            <p class="overview-label">Groupes actifs</p>
+            <strong class="overview-value">{{ dashboardOverview.groupCount }}</strong>
+            <span class="overview-meta">espace{{ dashboardOverview.groupCount > 1 ? 's' : '' }} de jeu</span>
+        </article>
+        <article class="overview-card">
+            <p class="overview-label">Sessions récentes</p>
+            <strong class="overview-value">{{ dashboardOverview.recentSessionsCount }}</strong>
+            <span class="overview-meta">sur vos groupes</span>
+        </article>
+        <article class="overview-card">
+            <p class="overview-label">Invitations en attente</p>
+            <strong class="overview-value">{{ dashboardOverview.pendingInvitesCount }}</strong>
+            <span class="overview-meta">à traiter</span>
+        </article>
+        <article class="overview-card overview-card-action">
+            <p class="overview-label">Prochaine étape</p>
+            {% if dashboardOverview.groupCount == 0 %}
+                <strong class="overview-value-sm">Créer votre premier groupe</strong>
+                <a href="{{ path('group_create_form') }}" class="btn btn-secondary btn-sm">Démarrer</a>
+            {% elseif dashboardOverview.recentSessionsCount == 0 %}
+                <strong class="overview-value-sm">Créer votre première session</strong>
+                <a href="{{ path('group_show', {id: firstGroup.id}) }}" class="btn btn-secondary btn-sm">Choisir un groupe</a>
+            {% elseif recentSessions is not empty %}
+                {% set latestSession = recentSessions|first %}
+                <strong class="overview-value-sm">Continuer votre activité</strong>
+                <a href="{{ path('session_show', {groupId: latestSession.group.id, sessionId: latestSession.id}) }}" class="btn btn-secondary btn-sm">Voir la dernière session</a>
+            {% else %}
+                <strong class="overview-value-sm">Tout est prêt</strong>
+            {% endif %}
+        </article>
+    </section>
+
+    {# Invitations en attente #}
+    {% if pendingInvites is not empty %}
+    <section class="section-invites">
+        <div class="alert alert-warning">
+            <div class="alert-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <path d="M12 7v6M12 17h.01"/>
+                </svg>
+            </div>
+            <div class="alert-content">
+                <h3 class="alert-title">{{ pendingInvites|length }} invitation{{ pendingInvites|length > 1 ? 's' : '' }} en attente</h3>
+                <div class="invites-list">
+                    {% for invite in pendingInvites %}
+                    <div class="invite-item">
+                        <div class="invite-info">
+                            <strong>{{ invite.group.name }}</strong>
+                            <span class="badge badge-secondary">{{ invite.role.value }}</span>
+                            <span class="text-muted">· Expire le {{ invite.expiresAt|date('d/m/Y') }}</span>
+                        </div>
+                        <a href="{{ path('invite_accept', {token: invite.token}) }}" class="btn btn-sm btn-accent">Accepter</a>
                     </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# Stats rapides #}
+    {% if dashboardStats is not empty or memberStats is not empty or activityStats is not empty %}
+    <h2 class="dashboard-section-title" style="margin-bottom: 1rem;">Stats rapides</h2>
+    <div class="sr-only" aria-hidden="true">
+        {% if memberStats is not empty %}
+            <h3>Stats membre ({{ memberStats.groupName }})</h3>
+            <p>Sessions: <strong>{{ memberStats.sessionsCount }}</strong></p>
+            <p>Entries: <strong>{{ memberStats.entriesCount }}</strong></p>
+            <p>Points cumulés: <strong>{{ memberStats.totalPoints|number_format(0, ',', ' ') }}</strong></p>
+            <p>Victoires / Défaites: <strong>{{ memberStats.wins }} / {{ memberStats.losses }}</strong></p>
+        {% endif %}
+        {% if activityStats is not empty %}
+            <h3>Stats activité</h3>
+            <p>Participants fréquents</p>
+            {% if activityStats.topParticipants is not empty %}
+                {% for participant in activityStats.topParticipants %}
+                    <p>{{ participant.name }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+        {% if dashboardStats is not empty %}
+            <h3>Dashboard enrichi</h3>
+            <p>Sessions cette semaine</p>
+            <p>Groupe le plus actif</p>
+        {% endif %}
+    </div>
+    <section class="stats-grid">
+        {% if dashboardStats is not empty %}
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M8 12h8M12 8v8"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Cette semaine</h3>
+                <p class="stat-value">{{ dashboardStats.sessionsThisWeek }}</p>
+                <p class="stat-sublabel">session{{ dashboardStats.sessionsThisWeek > 1 ? 's' : '' }}</p>
+            </div>
+        </div>
+        
+        {% if dashboardStats.mostPlayedActivityName %}
+        {% set favoriteActivityMeta = activity_meta(dashboardStats.mostPlayedActivityName) %}
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-activity" style="--activity-accent: {{ favoriteActivityMeta.accent }}; --activity-background: {{ favoriteActivityMeta.background }}; --activity-foreground: {{ favoriteActivityMeta.foreground }};">
+                {% if favoriteActivityMeta.iconUrl %}
+                    <img src="{{ favoriteActivityMeta.iconUrl }}" alt="{{ favoriteActivityMeta.iconAlt }}" loading="lazy">
+                {% else %}
+                    <span>{{ favoriteActivityMeta.shortLabel }}</span>
                 {% endif %}
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Activité favorite</h3>
+                <p class="stat-value">
+                    {% if dashboardStats.mostPlayedActivityId and dashboardStats.mostPlayedActivityGroupId %}
+                        <a href="{{ path('activity_show', { groupId: dashboardStats.mostPlayedActivityGroupId, activityId: dashboardStats.mostPlayedActivityId }) }}">{{ dashboardStats.mostPlayedActivityName }}</a>
+                    {% else %}
+                        {{ dashboardStats.mostPlayedActivityName }}
+                    {% endif %}
+                </p>
+                <p class="stat-sublabel">{{ dashboardStats.mostPlayedActivitySessions }} parties</p>
+            </div>
+        </div>
+        {% endif %}
 
-                {% if activityStats is not empty %}
-                    <div class="border rounded-lg p-4 bg-white">
-                        <h3 class="font-semibold text-lg mb-2">Stats activité</h3>
-                        <p class="text-sm text-gray-700">Activité la plus jouée: <strong>{{ activityStats.activityName }}</strong></p>
-                        <p class="text-sm text-gray-700">Sessions: <strong>{{ activityStats.sessionsCount }}</strong></p>
-                        <p class="text-sm text-gray-700">Dernière session: <strong>{{ activityStats.lastPlayedAt|date('d M Y à H:i', 'Europe/Paris') }}</strong></p>
+        {% if dashboardStats.mostActiveGroupName %}
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Groupe actif</h3>
+                <p class="stat-value-sm">{{ dashboardStats.mostActiveGroupName }}</p>
+                <p class="stat-sublabel">{{ dashboardStats.mostActiveGroupSessions }} sessions</p>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
 
-                        {% if activityStats.topParticipants is not empty %}
-                            <div class="mt-3">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Participants fréquents</p>
-                                <ul class="text-sm text-gray-700 space-y-1">
-                                    {% for participant in activityStats.topParticipants %}
-                                        <li>{{ participant.name }} <span class="text-gray-500">({{ participant.count }})</span></li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+        {% if memberStats is not empty %}
+        <div class="stat-card stat-card-extended">
+            <h3 class="stat-card-title">Vos performances</h3>
+            <div class="stat-list">
+                <div class="stat-list-item">
+                    <span class="stat-list-label">Victoires</span>
+                    <span class="stat-list-value highlight-success">{{ memberStats.wins }}</span>
+                </div>
+                <div class="stat-list-item">
+                    <span class="stat-list-label">Défaites</span>
+                    <span class="stat-list-value">{{ memberStats.losses }}</span>
+                </div>
+                <div class="stat-list-item">
+                    <span class="stat-list-label">Points cumulés</span>
+                    <span class="stat-list-value highlight-primary">{{ memberStats.totalPoints|number_format(0, ',', ' ') }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    {% set hallOfFame = dashboardStats.hallOfFame|default({}) %}
+    {% if hallOfFame.topThree|default([]) is not empty %}
+    <section class="dashboard-hall-of-fame">
+        <div class="section-header">
+            <div>
+                <h2 class="dashboard-section-title">Hall of Fame de saison</h2>
+                {% set hallOfFameMeta = activity_meta(hallOfFame.activityName|default('')) %}
+                <p class="hall-of-fame-subtitle dashboard-activity-line">
+                    <span class="activity-mini-badge" style="--activity-accent: {{ hallOfFameMeta.accent }}; --activity-background: {{ hallOfFameMeta.background }}; --activity-foreground: {{ hallOfFameMeta.foreground }};">
+                        {% if hallOfFameMeta.iconUrl %}
+                            <img src="{{ hallOfFameMeta.iconUrl }}" alt="{{ hallOfFameMeta.iconAlt }}" loading="lazy">
+                        {% else %}
+                            <span>{{ hallOfFameMeta.shortLabel }}</span>
                         {% endif %}
-                    </div>
-                {% endif %}
-
-                {% if dashboardStats is not empty %}
-                    <div class="border rounded-lg p-4 bg-white">
-                        <h3 class="font-semibold text-lg mb-2">Dashboard enrichi</h3>
-                        <ul class="space-y-1 text-sm text-gray-700">
-                            <li>Sessions cette semaine: <strong>{{ dashboardStats.sessionsThisWeek }}</strong></li>
-                            <li>Activité la plus jouée: <strong>{{ dashboardStats.mostPlayedActivityName ?? 'N/A' }}</strong>{% if (dashboardStats.mostPlayedActivitySessions ?? 0) > 0 %} ({{ dashboardStats.mostPlayedActivitySessions }}){% endif %}</li>
-                            <li>Groupe le plus actif: <strong>{{ dashboardStats.mostActiveGroupName ?? 'N/A' }}</strong>{% if (dashboardStats.mostActiveGroupSessions ?? 0) > 0 %} ({{ dashboardStats.mostActiveGroupSessions }}){% endif %}</li>
-                        </ul>
-                    </div>
-                {% endif %}
+                        {{ hallOfFame.activityName }}
+                    </span>
+                    <span>{{ hallOfFame.seasonLabel }}</span>
+                </p>
             </div>
+            {% if hallOfFame.activityId and hallOfFame.groupId %}
+            <a href="{{ path('activity_show', { groupId: hallOfFame.groupId, activityId: hallOfFame.activityId }) }}" class="link-secondary">Voir le tracker</a>
+            {% endif %}
         </div>
+        <div class="hall-of-fame-grid">
+            {% for row in hallOfFame.topThree %}
+            <article class="hall-of-fame-card rank-{{ loop.index }}">
+                <p class="hall-rank">Top {{ loop.index }}</p>
+                <strong>{{ row.label }}</strong>
+                {% if hallOfFame.isMatchMode %}
+                <span>{{ row.mmr|round(0, 'common') }} MMR · {{ row.wins }}V{% if row.draws is defined %} · {{ row.draws }}N{% endif %} · {{ row.losses }}D</span>
+                {% else %}
+                <span>{{ row.pointsTotal|number_format(0, ',', ' ') }} pts · {{ row.entriesCount }} entrée{{ row.entriesCount > 1 ? 's' : '' }}</span>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
     {% endif %}
 
-    {% if groups is empty and recentSessions is empty and pendingInvites is empty %}
-        <div class="text-gray-500 text-center py-12">
-            <p>Bienvenue ! Crée ou rejoins un groupe pour commencer.</p>
+    {% set favoriteRecords = dashboardStats.favoriteActivityRecords|default({}) %}
+    {% if favoriteRecords.allTime|default([]) is not empty %}
+    <section class="dashboard-records-panel">
+        <div class="section-header">
+            <div>
+                <h2 class="dashboard-section-title">Records de l'activité favorite</h2>
+                {% set favoriteRecordsMeta = activity_meta(favoriteRecords.activityName|default('')) %}
+                <p class="hall-of-fame-subtitle">
+                    <span class="activity-mini-badge" style="--activity-accent: {{ favoriteRecordsMeta.accent }}; --activity-background: {{ favoriteRecordsMeta.background }}; --activity-foreground: {{ favoriteRecordsMeta.foreground }};">
+                        {% if favoriteRecordsMeta.iconUrl %}
+                            <img src="{{ favoriteRecordsMeta.iconUrl }}" alt="{{ favoriteRecordsMeta.iconAlt }}" loading="lazy">
+                        {% else %}
+                            <span>{{ favoriteRecordsMeta.shortLabel }}</span>
+                        {% endif %}
+                        {{ favoriteRecords.activityName }}
+                    </span>
+                </p>
+            </div>
+            {% if favoriteRecords.activityId and favoriteRecords.groupId %}
+            <a href="{{ path('activity_show', { groupId: favoriteRecords.groupId, activityId: favoriteRecords.activityId }) }}" class="link-secondary">Voir le tracker</a>
+            {% endif %}
         </div>
-    {% else %}
+        <div class="dashboard-records-columns">
+            <div class="dashboard-records-group">
+                <h3 class="stat-card-title">All-time</h3>
+                <div class="dashboard-records-grid">
+                    {% for record in favoriteRecords.allTime %}
+                    <article class="dashboard-record-card">
+                        <p>{{ record.title }}</p>
+                        <strong>{{ record.value }}</strong>
+                        <span>{{ record.meta }}</span>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if favoriteRecords.season|default([]) is not empty %}
+            <div class="dashboard-records-group">
+                <h3 class="stat-card-title">{{ favoriteRecords.seasonLabel }}</h3>
+                <div class="dashboard-records-grid">
+                    {% for record in favoriteRecords.season %}
+                    <article class="dashboard-record-card">
+                        <p>{{ record.title }}</p>
+                        <strong>{{ record.value }}</strong>
+                        <span>{{ record.meta }}</span>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+    {% endif %}
 
-        {# Bloc 1 : Mes groupes #}
-        {% if groups is not empty %}
-        <div class="mb-10">
-            <h2 class="text-xl font-bold mb-4">Mes groupes</h2>
-            <div class="grid gap-4">
+    <div class="content-grid">
+        {# Mes groupes #}
+        <section class="content-section">
+            <div class="section-header">
+                <h2 class="dashboard-section-title">Mes groupes</h2>
+                {% if groups is not empty %}
+                <a href="{{ path('group_index') }}" class="link-secondary">Tout voir</a>
+                {% endif %}
+            </div>
+
+            {% if groups is empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">Aucun groupe</h3>
+                <p class="empty-state-text">Créez votre premier groupe pour commencer à jouer avec vos amis</p>
+                <a href="{{ path('group_create_form') }}" class="btn btn-primary">Créer un groupe</a>
+            </div>
+            {% else %}
+            <div class="card-list">
                 {% for group in groups %}
-                    <div class="border rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-semibold text-lg">
-                                    <a href="{{ path('group_show', {id: group.id}) }}" class="text-blue-600 hover:underline">
-                                        {{ group.name }}
-                                    </a>
-                                </h3>
-                                <p class="text-sm text-gray-600">
-                                    Rôle : <span class="font-semibold">{{ (groupRoles[group.id] ?? 'UNKNOWN')|upper }}</span>
-                                </p>
-                            </div>
-                            <a href="{{ path('group_show', {id: group.id}) }}" class="text-blue-600 hover:underline">
-                                Voir →
-                            </a>
+                <a href="{{ path('group_show', {id: group.id}) }}" class="card card-interactive">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
                         </div>
+                        <div class="card-header-content">
+                            <h3 class="card-title">{{ group.name }}</h3>
+                            <p class="card-subtitle">{{ group.groupMembers|length }} membre{{ group.groupMembers|length > 1 ? 's' : '' }}</p>
+                        </div>
+                        <span class="badge badge-primary">{{ groupRoles[group.id] ?? 'member' }}</span>
                     </div>
+                </a>
                 {% endfor %}
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
+        </section>
 
-        {# Bloc 2 : Sessions récentes #}
-        {% if recentSessions is not empty %}
-        <div class="mb-10">
-            <h2 class="text-xl font-bold mb-4">Sessions recentes</h2>
-            <div class="space-y-3">
+        {# Sessions récentes #}
+        <section class="content-section">
+            <div class="section-header">
+                <h2 class="dashboard-section-title">Sessions récentes</h2>
+            </div>
+
+            {% if recentSessions is empty %}
+            <div class="empty-state empty-state-compact">
+                <p class="empty-state-text">Aucune session récente</p>
+                {% if groups is not empty %}
+                    <a href="{{ path('group_show', {id: firstGroup.id}) }}" class="btn btn-secondary btn-sm">Créer une session</a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="card-list">
                 {% for session in recentSessions %}
-                    <div class="border rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h3 class="font-semibold">
-                                    <a href="{{ path('session_show', {groupId: session.group.id, sessionId: session.id}) }}" class="text-blue-600 hover:underline">
-                                        {{ session.title ?? session.activity.name }}
-                                    </a>
-                                </h3>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">{{ session.group.name }}</span>
-                                    {% if session.activity %}
-                                        · {{ session.activity.name }}
-                                    {% endif %}
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    {{ session.playedAt|date('d M Y à H:i', 'Europe/Paris') }}
-                                </p>
-                            </div>
-                            <a href="{{ path('session_show', {groupId: session.group.id, sessionId: session.id}) }}" class="text-blue-600 hover:underline">
-                                Ouvrir →
-                            </a>
+                <a href="{{ path('session_show', {groupId: session.group.id, sessionId: session.id}) }}" class="card card-interactive">
+                    <div class="card-header">
+                        <div class="card-icon card-icon-sm">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="card-header-content">
+                            <h3 class="card-title">{{ session.title ?: session.activity.name }}</h3>
+                            <p class="card-subtitle">
+                                {{ session.group.name }} · {{ session.playedAt|date('d/m/Y') }}
+                            </p>
                         </div>
                     </div>
+                </a>
                 {% endfor %}
             </div>
-        </div>
-        {% endif %}
-
-        {# Bloc 3 : Invitations reçues #}
-        {% if pendingInvites is not empty %}
-        <div class="mb-10">
-            <h2 class="text-xl font-bold mb-4">Invitations recues</h2>
-            <div class="space-y-3">
-                {% for invite in pendingInvites %}
-                    <div class="border border-orange-200 bg-orange-50 rounded-lg p-4">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h3 class="font-semibold text-orange-900">
-                                    Tu es invité à rejoindre <strong>{{ invite.group.name }}</strong>
-                                </h3>
-                                <p class="text-sm text-orange-700 mt-1">
-                                    Rôle proposé : <span class="font-semibold">{{ invite.role.value|upper }}</span>
-                                </p>
-                                <p class="text-xs text-orange-600 mt-2">
-                                    Valable jusqu'au {{ invite.expiresAt|date('d M Y', 'Europe/Paris') }}
-                                </p>
-                            </div>
-                            <a href="{{ path('invite_accept', {token: invite.token}) }}" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-semibold text-sm transition">
-                                Accepter
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-    {% endif %}
+            {% endif %}
+        </section>
+    </div>
+</div>
 </div>
 {% endblock %}

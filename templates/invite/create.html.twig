@@ -3,30 +3,32 @@
 {% block title %}Inviter un membre - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>Inviter un membre au groupe "{{ group.name }}"</h1>
+  <section class="invite-page">
+    <div class="invite-card">
+      <p class="invite-kicker">Gestion des invitations</p>
+      <h1>Inviter un membre</h1>
+      <p class="invite-subtitle">Groupe: <strong>{{ group.name }}</strong></p>
+      <p class="invite-subtitle">Cette invitation permet à votre ami de rejoindre le groupe avec un accès membre. Ce n'est pas un lien public en lecture seule.</p>
 
-  {% for message in app.flashes('success') %}
-    <div class="alert alert-success">
-      {{ message }}
+      {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+      {% endfor %}
+
+      {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+      {% endfor %}
+
+      <form method="post" class="invite-form">
+        <div>
+          <label for="email">Email du membre à inviter</label>
+          <input type="email" id="email" name="email" required placeholder="exemple@email.com">
+        </div>
+
+        <div class="invite-actions">
+          <button class="btn btn-primary" type="submit">Créer l'invitation</button>
+          <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+        </div>
+      </form>
     </div>
-  {% endfor %}
-
-  {% for message in app.flashes('error') %}
-    <div class="alert alert-danger">
-      {{ message }}
-    </div>
-  {% endfor %}
-
-  <form method="post">
-    <div>
-      <label for="email">Email du membre à inviter</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-
-    <button type="submit">Créer l’invitation</button>
-  </form>
-
-  <p>
-    <a href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
-  </p>
+  </section>
 {% endblock %}

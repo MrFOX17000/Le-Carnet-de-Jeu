@@ -1,67 +1,403 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Créer une entry match - {{ group.name }}{% endblock %}
+{% block title %}Ajouter un résultat - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>Nouvelle entry match</h1>
+<section class="match-create-page">
+  <div class="match-create-card">
+    <nav class="flow-steps" aria-label="Progression de création">
+      <span class="flow-step is-done"><strong>1</strong> Activité</span>
+      <span class="flow-step is-done"><strong>2</strong> Session</span>
+      <span class="flow-step is-active"><strong>3</strong> Résultats</span>
+    </nav>
 
-  <p>Groupe : <strong>{{ group.name }}</strong></p>
-  <p>Session : <strong>{{ session.title ?: session.activity.name }}</strong></p>
+    {% set mode = activity.contextMode.value %}
+    {% set activityMeta = activity_meta(activity.name, mode) %}
 
-  {% for message in app.flashes('error') %}
-    <div class="alert alert-danger">{{ message }}</div>
-  {% endfor %}
+    {# Kicker et titre adaptés au mode #}
+    {% if mode == 'duel' %}
+      <p class="match-create-kicker"><a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">{{ group.name }} · {{ session.playedAt|date('d/m/Y') }}</a> · Duel 1v1</p>
+      <h1>Ajouter un duel</h1>
+    {% elseif mode == 'duel_equipe' %}
+      <p class="match-create-kicker"><a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">{{ group.name }} · {{ session.playedAt|date('d/m/Y') }}</a> · Match d'équipes</p>
+      <h1>Ajouter un match</h1>
+    {% elseif mode == 'groupe_vs_externe' %}
+      <p class="match-create-kicker"><a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">{{ group.name }} · {{ session.playedAt|date('d/m/Y') }}</a> · Groupe vs Extérieur</p>
+      <h1>Ajouter un match</h1>
+    {% else %}
+      <p class="match-create-kicker"><a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">{{ group.name }} · {{ session.playedAt|date('d/m/Y') }}</a> · Match</p>
+      <h1>Ajouter un résultat</h1>
+    {% endif %}
 
-  <form method="post">
-    <div>
-      <label for="label">Label (optionnel)</label>
-      <input type="text" id="label" name="label" placeholder="Ex: Quart de finale">
+    <p class="match-activity-line">
+      <span class="activity-mini-badge" style="--activity-accent: {{ activityMeta.accent }}; --activity-background: {{ activityMeta.background }}; --activity-foreground: {{ activityMeta.foreground }};">
+        {% if activityMeta.iconUrl %}
+          <img src="{{ activityMeta.iconUrl }}" alt="{{ activityMeta.iconAlt }}" loading="lazy">
+        {% else %}
+          <span>{{ activityMeta.shortLabel }}</span>
+        {% endif %}
+        {{ activity.name }}
+      </span>
+    </p>
+
+    <div class="session-flow-help" role="note" aria-label="Aide saisie match">
+      <p><strong>Simple :</strong> choisis un membre pour remplir automatiquement son nom, ou utilise les badges pour préparer l'affiche.</p>
     </div>
 
-    <div>
-      <label for="homeName">Equipe domicile</label>
-      <input type="text" id="homeName" name="homeName" required>
-    </div>
+    {% for message in app.flashes('error') %}
+      <div class="flash flash-error">{{ message }}</div>
+    {% endfor %}
 
-    <div>
-      <label for="homeUserId">Membre domicile (optionnel)</label>
-      <select id="homeUserId" name="homeUserId">
-        <option value="">-- Aucun --</option>
-        {% for membership in groupMembers %}
-          <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
-        {% endfor %}
-      </select>
-    </div>
+    <form method="post" class="match-create-form">
+      <div>
+        <label for="label">Intitulé (optionnel)</label>
+        <input type="text" id="label" name="label"
+               placeholder="{{ mode == 'duel' ? 'Ex : Partie 1, Revanche…' : (mode == 'groupe_vs_externe' ? 'Ex : RL C3 #1, Valo #3…' : 'Ex : Manche 1, Finale…') }}">
+        <div class="session-title-tools">
+          <button type="button" class="btn btn-secondary btn-sm" id="match-generate-label">Générer un titre automatiquement</button>
+          <span class="session-auto-hint" id="match-label-auto-hint" aria-live="polite"></span>
+        </div>
+      </div>
 
-    <div>
-      <label for="awayName">Equipe exterieur</label>
-      <input type="text" id="awayName" name="awayName" required>
-    </div>
+      <div class="match-team-grid">
 
-    <div>
-      <label for="awayUserId">Membre exterieur (optionnel)</label>
-      <select id="awayUserId" name="awayUserId">
-        <option value="">-- Aucun --</option>
-        {% for membership in groupMembers %}
-          <option value="{{ membership.user.id }}">{{ membership.user.email }}</option>
-        {% endfor %}
-      </select>
-    </div>
+        {# --- Côté LOCAL / DOMICILE --- #}
+        <div class="match-team-block">
+          {% if mode == 'duel' %}
+            <label for="homeName">Joueur local</label>
+            <input type="text" id="homeName" name="homeName" required placeholder="Prénom ou pseudo">
+          {% elseif mode == 'duel_equipe' %}
+            <label for="homeName">Équipe A</label>
+            <input type="text" id="homeName" name="homeName" required placeholder="Nom de l'équipe A">
+          {% elseif mode == 'groupe_vs_externe' %}
+            <label for="homeName">Notre équipe</label>
+            <input type="text" id="homeName" name="homeName" required
+                   value="{{ group.name }}"
+                   placeholder="Nom de votre équipe">
+          {% else %}
+            <label for="homeName">Équipe domicile</label>
+            <input type="text" id="homeName" name="homeName" required>
+          {% endif %}
+        </div>
 
-    <div>
-      <label for="homeScore">Score domicile</label>
-      <input type="number" id="homeScore" name="homeScore" min="0" step="1" required>
-    </div>
+        {# --- Côté EXTÉRIEUR / ADVERSE --- #}
+        <div class="match-team-block">
+          {% if mode == 'duel' %}
+            <label for="awayName">Joueur adverse</label>
+            <input type="text" id="awayName" name="awayName" required placeholder="Prénom ou pseudo">
+          {% elseif mode == 'duel_equipe' %}
+            <label for="awayName">Équipe B</label>
+            <input type="text" id="awayName" name="awayName" required placeholder="Nom de l'équipe B">
+          {% elseif mode == 'groupe_vs_externe' %}
+            <label for="awayName">Adversaires</label>
+            <input type="text" id="awayName" name="awayName" required placeholder="Ex : Adversaires, Équipe rouge…">
+          {% else %}
+            <label for="awayName">Équipe extérieur</label>
+            <input type="text" id="awayName" name="awayName" required>
+          {% endif %}
+        </div>
+      </div>
 
-    <div>
-      <label for="awayScore">Score exterieur</label>
-      <input type="number" id="awayScore" name="awayScore" min="0" step="1" required>
-    </div>
+      {% if groupMembers is not empty %}
+      <div class="match-member-quickfill">
+        <div>
+          <p class="match-member-quickfill-label">Côté gauche</p>
+          <div class="entry-member-quickadd" aria-label="Raccourcis côté gauche">
+            {% for membership in groupMembers %}
+              {% set memberLabel = membership.user.displayName ?: membership.user.email %}
+              <button type="button" class="activity-mini-badge entry-member-chip" data-target-side="home" data-member-id="{{ membership.user.id }}" data-member-label="{{ memberLabel|e('html_attr') }}">
+                <span>{{ memberLabel|slice(0, 2)|upper }}</span>
+                {{ memberLabel }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <p class="match-member-quickfill-label">Côté droit</p>
+          <div class="entry-member-quickadd" aria-label="Raccourcis côté droit">
+            {% for membership in groupMembers %}
+              {% set memberLabel = membership.user.displayName ?: membership.user.email %}
+              <button type="button" class="activity-mini-badge entry-member-chip" data-target-side="away" data-member-id="{{ membership.user.id }}" data-member-label="{{ memberLabel|e('html_attr') }}">
+                <span>{{ memberLabel|slice(0, 2)|upper }}</span>
+                {{ memberLabel }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <p class="entry-auto-hint" id="match-auto-hint" aria-live="polite"></p>
+      {% endif %}
 
-    <button type="submit">Créer l'entry match</button>
-  </form>
+      {# Liaison aux membres du groupe (masquée pour groupe_vs_externe côté adverse) #}
+      {% if mode != 'groupe_vs_externe' %}
+      <div class="match-team-grid">
+        <div>
+          <label for="homeUserId">
+            {{ mode == 'duel' ? 'Membre du groupe (côté local)' : 'Membre lié (équipe A)' }} <span class="label-optional">optionnel</span>
+          </label>
+          <select id="homeUserId" name="homeUserId">
+            <option value="">-- Aucun --</option>
+            {% for membership in groupMembers %}
+              {% set memberLabel = membership.user.displayName ?: membership.user.email %}
+              <option value="{{ membership.user.id }}" data-member-label="{{ memberLabel|e('html_attr') }}">{{ memberLabel }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="awayUserId">
+            {{ mode == 'duel' ? 'Membre du groupe (côté adverse)' : 'Membre lié (équipe B)' }} <span class="label-optional">optionnel</span>
+          </label>
+          <select id="awayUserId" name="awayUserId">
+            <option value="">-- Aucun --</option>
+            {% for membership in groupMembers %}
+              {% set memberLabel = membership.user.displayName ?: membership.user.email %}
+              <option value="{{ membership.user.id }}" data-member-label="{{ memberLabel|e('html_attr') }}">{{ memberLabel }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% else %}
+      {# En mode groupe_vs_externe : on lie uniquement à un membre côté local #}
+      <div>
+        <label for="homeUserId">Membre du groupe lié <span class="label-optional">optionnel</span></label>
+        <select id="homeUserId" name="homeUserId">
+          <option value="">-- Aucun --</option>
+          {% for membership in groupMembers %}
+            {% set memberLabel = membership.user.displayName ?: membership.user.email %}
+            <option value="{{ membership.user.id }}" data-member-label="{{ memberLabel|e('html_attr') }}">{{ memberLabel }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="awayUserId" value="">
+      </div>
+      {% endif %}
 
-  <p>
-    <a href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">Retour à la session</a>
-  </p>
+      {# Scores #}
+      <div class="match-team-grid">
+        <div>
+          <label for="homeScore">
+            {{ mode == 'duel' ? 'Score (joueur local)' : (mode == 'groupe_vs_externe' ? 'Score (notre équipe)' : 'Score (équipe A)') }}
+          </label>
+          <input type="number" id="homeScore" name="homeScore" min="0" step="1" required>
+        </div>
+        <div>
+          <label for="awayScore">
+            {{ mode == 'duel' ? 'Score (joueur adverse)' : (mode == 'groupe_vs_externe' ? 'Score (adversaires)' : 'Score (équipe B)') }}
+          </label>
+          <input type="number" id="awayScore" name="awayScore" min="0" step="1" required>
+        </div>
+      </div>
+
+      <div class="match-create-actions">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a class="btn btn-secondary" href="{{ path('session_show', { groupId: group.id, sessionId: session.id }) }}">Retour à la session</a>
+      </div>
+    </form>
+  </div>
+</section>
+<script>
+(function () {
+  const matchAutoHint = document.getElementById('match-auto-hint');
+  const labelInput = document.getElementById('label');
+  const labelHint = document.getElementById('match-label-auto-hint');
+  const generateLabelBtn = document.getElementById('match-generate-label');
+  const homeNameInput = document.getElementById('homeName');
+  const awayNameInput = document.getElementById('awayName');
+  const homeSelect = document.getElementById('homeUserId');
+  const awaySelect = document.getElementById('awayUserId');
+  const quickfillButtons = Array.from(document.querySelectorAll('.entry-member-chip[data-target-side]'));
+
+  function updateHint(message) {
+    if (matchAutoHint) {
+      matchAutoHint.textContent = message;
+    }
+  }
+
+  function updateLabelHint(message) {
+    if (labelHint) {
+      labelHint.textContent = message;
+    }
+  }
+
+  function buildAutoLabel() {
+    const homeLabel = homeNameInput ? homeNameInput.value.trim() : '';
+    const awayLabel = awayNameInput ? awayNameInput.value.trim() : '';
+
+    if (homeLabel === '' && awayLabel === '') {
+      return '';
+    }
+
+    if (homeLabel !== '' && awayLabel !== '') {
+      return homeLabel + ' vs ' + awayLabel;
+    }
+
+    return homeLabel || awayLabel;
+  }
+
+  function applyAutoLabel(force) {
+    if (!labelInput) {
+      return;
+    }
+
+    const autoLabel = buildAutoLabel();
+    if (labelInput.dataset.userEdited === 'true' && !force) {
+      updateLabelHint('Titre personnalisé conservé.');
+      return;
+    }
+
+    labelInput.value = autoLabel;
+    updateLabelHint(autoLabel ? 'Titre proposé à partir des participants.' : 'Le titre se complètera dès que tu renseignes l’affiche.');
+  }
+
+  function clearSyncedNameIfNeeded(input, memberLabel) {
+    if (input && input.value === input.dataset.lastSyncedName && input.dataset.lastSyncedName === memberLabel) {
+      input.value = '';
+      input.dataset.lastSyncedName = '';
+    }
+  }
+
+  function refreshQuickfillButtons() {
+    const homeValue = homeSelect ? homeSelect.value : '';
+    const awayValue = awaySelect ? awaySelect.value : '';
+
+    quickfillButtons.forEach((button) => {
+      const targetSide = button.dataset.targetSide;
+      const memberId = button.dataset.memberId;
+      const isDisabled = (targetSide === 'home' && memberId !== '' && memberId === awayValue) || (targetSide === 'away' && memberId !== '' && memberId === homeValue);
+      button.disabled = isDisabled;
+    });
+  }
+
+  function refreshSelectOptions() {
+    const homeValue = homeSelect ? homeSelect.value : '';
+    const awayValue = awaySelect ? awaySelect.value : '';
+
+    if (homeSelect && awaySelect) {
+      Array.from(homeSelect.options).forEach((option) => {
+        option.disabled = option.value !== '' && option.value === awayValue;
+      });
+      Array.from(awaySelect.options).forEach((option) => {
+        option.disabled = option.value !== '' && option.value === homeValue;
+      });
+    }
+
+    refreshQuickfillButtons();
+  }
+
+  function preventDuplicateSelection(changedSide) {
+    if (!homeSelect || !awaySelect || homeSelect.value === '' || awaySelect.value === '') {
+      refreshSelectOptions();
+      return false;
+    }
+
+    if (homeSelect.value !== awaySelect.value) {
+      refreshSelectOptions();
+      return false;
+    }
+
+    const changedSelect = changedSide === 'away' ? awaySelect : homeSelect;
+    const changedInput = changedSide === 'away' ? awayNameInput : homeNameInput;
+    const otherInput = changedSide === 'away' ? homeNameInput : awayNameInput;
+    const selectedOption = changedSelect.options[changedSelect.selectedIndex];
+    const memberLabel = selectedOption ? (selectedOption.dataset.memberLabel || selectedOption.textContent || '') : '';
+
+    changedSelect.value = '';
+    clearSyncedNameIfNeeded(changedInput, memberLabel);
+    clearSyncedNameIfNeeded(otherInput, memberLabel);
+    updateHint(memberLabel + ' est déjà utilisé de l’autre côté.');
+    refreshSelectOptions();
+    applyAutoLabel();
+    return true;
+  }
+
+  function syncName(select, input) {
+    if (!select || !input) {
+      return;
+    }
+
+    select.addEventListener('change', function () {
+      const changedSide = this === awaySelect ? 'away' : 'home';
+      const option = this.options[this.selectedIndex];
+      if (!option || !option.value) {
+        refreshSelectOptions();
+        applyAutoLabel();
+        return;
+      }
+
+      if (preventDuplicateSelection(changedSide)) {
+        return;
+      }
+
+      const memberLabel = option.dataset.memberLabel || option.textContent || '';
+      if (input.value.trim() === '' || input.value === input.dataset.lastSyncedName) {
+        input.value = memberLabel;
+        input.dataset.lastSyncedName = memberLabel;
+        updateHint(memberLabel + ' placé automatiquement.');
+      }
+      refreshSelectOptions();
+      applyAutoLabel();
+    });
+
+    input.addEventListener('input', function () {
+      if (this.value !== this.dataset.lastSyncedName) {
+        this.dataset.lastSyncedName = '';
+      }
+      applyAutoLabel();
+    });
+  }
+
+  function applyMember(side, memberId, memberLabel) {
+    const select = side === 'away' ? awaySelect : homeSelect;
+    const input = side === 'away' ? awayNameInput : homeNameInput;
+    const otherSelect = side === 'away' ? homeSelect : awaySelect;
+    if (!select || !input) {
+      return;
+    }
+
+    if (otherSelect && otherSelect.value === String(memberId)) {
+      updateHint(memberLabel + ' est déjà utilisé de l’autre côté.');
+      return;
+    }
+
+    select.value = String(memberId);
+    input.value = memberLabel;
+    input.dataset.lastSyncedName = memberLabel;
+    updateHint(memberLabel + ' ajouté côté ' + (side === 'away' ? 'droit' : 'gauche') + '.');
+    refreshSelectOptions();
+    applyAutoLabel();
+  }
+
+  if (labelInput) {
+    labelInput.addEventListener('input', function () {
+      this.dataset.userEdited = this.value.trim() !== '' ? 'true' : 'false';
+      if (this.dataset.userEdited === 'false') {
+        applyAutoLabel(true);
+      } else {
+        updateLabelHint('Titre personnalisé conservé.');
+      }
+    });
+  }
+
+  if (generateLabelBtn) {
+    generateLabelBtn.addEventListener('click', function () {
+      if (labelInput) {
+        labelInput.dataset.userEdited = 'false';
+      }
+      applyAutoLabel(true);
+    });
+  }
+
+  syncName(homeSelect, homeNameInput);
+  syncName(awaySelect, awayNameInput);
+
+  quickfillButtons.forEach((button) => {
+    button.addEventListener('click', function () {
+      applyMember(this.dataset.targetSide, this.dataset.memberId, this.dataset.memberLabel || '');
+    });
+  });
+
+  refreshSelectOptions();
+  applyAutoLabel(true);
+  updateHint('Utilise les badges pour préparer le match en un clic.');
+})();
+</script>
 {% endblock %}

@@ -33,7 +33,7 @@ final class AcceptInviteController extends AbstractController
         $invite = $this->inviteRepository->findOneBy(['token' => $token]);
 
         if (null === $invite) {
-            $this->addFlash('error', 'Invitation not found or token is invalid.');
+            $this->addFlash('error', 'Invitation introuvable ou lien invalide.');
             return $this->redirectToRoute('group_index');
         }
 
@@ -46,7 +46,7 @@ final class AcceptInviteController extends AbstractController
 
                 $result = $this->handler->handle($command);
 
-                $this->addFlash('success', 'You have successfully joined the group!');
+                $this->addFlash('success', 'Vous avez rejoint le groupe avec succès !');
 
                 return $this->redirectToRoute('group_show', [
                     'id' => $result->getGroupId(),

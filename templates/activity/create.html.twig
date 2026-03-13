@@ -1,28 +1,210 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Créer une activité - {{ group.name }}{% endblock %}
+{% set isEdit = isEdit|default(false) %}
+{% set pageTitle = isEdit ? 'Modifier l\'activité' : 'Créer une activité' %}
+{% set currentActivity = currentActivity|default(null) %}
+
+{% block title %}{{ pageTitle }} - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>Créer une activité</h1>
+  <section class="activity-create-page">
+    <div class="activity-create-card">
+      <p class="activity-kicker">
+        <a href="{{ path('group_show', { id: group.id }) }}">{{ group.name }}</a>
+        · {{ isEdit ? 'Édition d\'activité' : 'Nouvelle activité' }}
+      </p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="activity-subtitle">{{ isEdit ? 'Mets à jour le nom et le type de confrontation de cette activité.' : 'Définis le nom et le type de confrontation pour pouvoir lancer des sessions rapidement.' }}</p>
+      {% if not isEdit %}
+        <nav class="flow-steps" aria-label="Progression de création">
+          <span class="flow-step is-active"><strong>1</strong> Activité</span>
+          <span class="flow-step"><strong>2</strong> Session</span>
+          <span class="flow-step"><strong>3</strong> Résultats</span>
+        </nav>
+      {% endif %}
+      {% if not isEdit %}
+        <div class="session-flow-help" role="note" aria-label="Aide création activité">
+          <p><strong>Simple :</strong> clique une activité ci-dessous (auto-remplissage), ajuste si besoin, puis crée.</p>
+        </div>
+      {% endif %}
 
-  <p>Groupe : <strong>{{ group.name }}</strong></p>
+      <div class="activity-template-suggestions" aria-label="Suggestions d'activité">
+        {% set suggestions = [
+          {label: 'Rocket League', mode: 'duel'},
+          {label: 'Valorant', mode: 'groupe_vs_externe'},
+          {label: 'Fortnite', mode: 'groupe_vs_externe'},
+          {label: 'Counter-Strike 2', mode: 'groupe_vs_externe'},
+          {label: 'League of Legends', mode: 'groupe_vs_externe'},
+          {label: 'EA FC 26', mode: 'duel'},
+          {label: 'Mario Kart', mode: 'ranking'},
+          {label: 'Skyjo', mode: 'ranking'},
+          {label: 'Catan', mode: 'ranking'},
+          {label: 'Uno', mode: 'ranking'},
+          {label: 'Échecs', mode: 'duel'},
+          {label: 'Belote', mode: 'duel_equipe'},
+        ] %}
+        {% for suggestion in suggestions %}
+          {% set suggestionMeta = activity_meta(suggestion.label, suggestion.mode) %}
+          <button
+            type="button"
+            class="activity-mini-badge activity-template-chip"
+            data-template-label="{{ suggestion.label }}"
+            data-template-mode="{{ suggestion.mode }}"
+            style="--activity-accent: {{ suggestionMeta.accent }}; --activity-background: {{ suggestionMeta.background }}; --activity-foreground: {{ suggestionMeta.foreground }};"
+            aria-label="Préremplir {{ suggestion.label }}"
+          >
+            {% if suggestionMeta.iconUrl %}
+              <img src="{{ suggestionMeta.iconUrl }}" alt="{{ suggestionMeta.iconAlt }}" loading="lazy">
+            {% else %}
+              <span>{{ suggestionMeta.shortLabel }}</span>
+            {% endif %}
+            {{ suggestion.label }}
+          </button>
+        {% endfor %}
+      </div>
+      <p class="activity-template-help text-muted">Astuce : un clic sur un badge remplit automatiquement le nom et le type recommandé.</p>
 
-  {% for message in app.flashes('error') %}
-    <div class="alert alert-danger">
-      {{ message }}
+      {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+      {% endfor %}
+
+      <form method="post" class="activity-create-form">
+        <div>
+          <label for="name">Nom de l'activité</label>
+          <input type="text" id="name" name="name" list="activity-name-suggestions" value="{{ currentActivity and currentActivity.name ? currentActivity.name : '' }}" required placeholder="Ex: Rocket League, Valorant, Mario Kart, Catan...">
+          <datalist id="activity-name-suggestions">
+            {% for option in ['Rocket League', 'Valorant', 'Fortnite', 'Counter-Strike 2', 'League of Legends', 'EA FC 26', 'Overwatch', 'Apex Legends', 'Mario Kart', 'Skyjo', 'Catan', 'Uno', 'Échecs', 'Belote', 'Pétanque', 'Tennis de table'] %}
+              <option value="{{ option }}"></option>
+            {% endfor %}
+          </datalist>
+          <p class="activity-template-auto" id="activity-template-auto" aria-live="polite"></p>
+        </div>
+
+        <div>
+          <label for="contextMode">Type de confrontation</label>
+          {% set currentMode = currentActivity ? currentActivity.contextMode.value : 'ranking' %}
+          {% set modes = [
+            {value: 'ranking',           label: 'Classement libre — Skyjo, Catan, Mario Kart, Uno, Poker points…'},
+            {value: 'duel',              label: 'Duel 1v1 identifié — Échecs, Tennis, Ping-pong, jeu de cartes 1v1…'},
+            {value: 'duel_equipe',       label: 'Match d\'équipes internes — Belote 2v2, Pétanque, Volley, Basket interne…'},
+            {value: 'groupe_vs_externe', label: 'Groupe vs Adversaires extérieurs — Valorant, RL, Football, Basketball compét…'},
+          ] %}
+          <select id="contextMode" name="contextMode" required class="activity-context-select">
+            {% for m in modes %}
+              <option value="{{ m.value }}" {{ currentMode == m.value ? 'selected' : '' }}>{{ m.label }}</option>
+            {% endfor %}
+          </select>
+          <p class="activity-context-hint" id="context-hint" aria-live="polite"></p>
+        </div>
+
+        <div class="activity-create-actions">
+          <button type="submit" class="btn btn-primary">{{ isEdit ? 'Enregistrer les modifications' : 'Créer l\'activité' }}</button>
+          <a class="btn btn-secondary" href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
+        </div>
+      </form>
     </div>
-  {% endfor %}
+  </section>
 
-  <form method="post">
-    <div>
-      <label for="name">Nom de l'activité</label>
-      <input type="text" id="name" name="name" required placeholder="Ex: Rocket League, Skyjo, Échecs...">
-    </div>
+  <script>
+    (function () {
+      const hints = {
+        ranking:           'Chaque participant saisit son propre score (ou classement). Idéal pour Skyjo, Catan, Mario Kart…',
+        duel:              'Deux joueurs identifiés s\'affrontent en 1v1. Vous pouvez lier chaque côté à un membre du groupe.',
+        duel_equipe:       'Deux équipes nommées de membres du groupe. Chaque côté peut être lié à un membre.',
+        groupe_vs_externe: 'Le groupe joue ensemble face à des adversaires extérieurs. Le nom de votre équipe est pré-rempli.',
+      };
+      const activityRecommendedModes = {
+        'rocket league': 'duel',
+        'valorant': 'groupe_vs_externe',
+        'fortnite': 'groupe_vs_externe',
+        'counter-strike 2': 'groupe_vs_externe',
+        'cs2': 'groupe_vs_externe',
+        'league of legends': 'groupe_vs_externe',
+        'ea fc 26': 'duel',
+        'fifa': 'duel',
+        'mario kart': 'ranking',
+        'skyjo': 'ranking',
+        'catan': 'ranking',
+        'uno': 'ranking',
+        'echecs': 'duel',
+        'échecs': 'duel',
+        'belote': 'duel_equipe',
+        'overwatch': 'groupe_vs_externe',
+        'apex legends': 'groupe_vs_externe',
+      };
+      const sel = document.getElementById('contextMode');
+      const hint = document.getElementById('context-hint');
+      const nameInput = document.getElementById('name');
+      const autoInfo = document.getElementById('activity-template-auto');
+      const templateChips = Array.from(document.querySelectorAll('.activity-template-chip'));
 
-    <button type="submit">Créer l'activité</button>
-  </form>
+      function normalize(value) {
+        return (value || '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      }
 
-  <p>
-    <a href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
-  </p>
+      function setActiveChip(selectedLabel) {
+        const normalizedSelected = normalize(selectedLabel);
+        templateChips.forEach((chip) => {
+          const active = normalize(chip.dataset.templateLabel || '') === normalizedSelected;
+          chip.classList.toggle('is-active', active);
+        });
+      }
+
+      function update() {
+        hint.textContent = hints[sel.value] || '';
+      }
+
+      function applyTemplate(label, mode) {
+        nameInput.value = label;
+        sel.value = mode;
+        update();
+        setActiveChip(label);
+        if (autoInfo) {
+          autoInfo.textContent = 'Modèle appliqué : ' + label + ' (' + (hints[mode] ? 'mode recommandé' : mode) + ').';
+        }
+      }
+
+      templateChips.forEach((chip) => {
+        chip.addEventListener('click', function () {
+          applyTemplate(this.dataset.templateLabel || '', this.dataset.templateMode || 'ranking');
+        });
+      });
+
+      nameInput.addEventListener('input', function () {
+        const normalized = normalize(this.value);
+        const mode = activityRecommendedModes[normalized];
+        if (!mode) {
+          setActiveChip('');
+          if (autoInfo) {
+            autoInfo.textContent = this.value.trim() === ''
+              ? 'Choisis un modèle ou saisis une activité libre.'
+              : 'Activité personnalisée : choisis le type de confrontation qui correspond.';
+          }
+          return;
+        }
+
+        sel.value = mode;
+        update();
+        setActiveChip(this.value);
+        if (autoInfo) {
+          autoInfo.textContent = 'Type auto-suggéré : ' + (mode === 'ranking' ? 'Classement libre' : mode === 'duel' ? 'Duel 1v1' : mode === 'duel_equipe' ? 'Match d\'équipes' : 'Groupe vs Extérieur') + '.';
+        }
+      });
+
+      sel.addEventListener('change', update);
+      update();
+
+      if (nameInput.value.trim() === '' && autoInfo) {
+        autoInfo.textContent = 'Choisis un modèle ou saisis une activité libre.';
+      }
+
+      if (nameInput.value.trim() !== '') {
+        setActiveChip(nameInput.value);
+      }
+    })();
+  </script>
 {% endblock %}

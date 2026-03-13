@@ -1,0 +1,288 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ activity.name }} - {{ group.name }}{% endblock %}
+
+{% block body %}
+  {% set activityMeta = activity_meta(activity.name, activity.contextMode.value) %}
+  <section class="activity-tracker-page">
+    <header class="activity-header">
+      <div>
+        <p class="activity-kicker">Tracker activité</p>
+        <div class="activity-identity-card" style="--activity-accent: {{ activityMeta.accent }}; --activity-background: {{ activityMeta.background }}; --activity-foreground: {{ activityMeta.foreground }};">
+          <span class="activity-identity-icon">
+            {% if activityMeta.iconUrl %}
+              <img src="{{ activityMeta.iconUrl }}" alt="{{ activityMeta.iconAlt }}" loading="lazy">
+            {% else %}
+              {{ activityMeta.shortLabel }}
+            {% endif %}
+          </span>
+          <div class="activity-identity-copy">
+            <div class="activity-identity-badges">
+              <span class="activity-brand-chip">{{ activityMeta.badge }}</span>
+              <span class="activity-brand-chip activity-brand-chip-muted">{{ activityMeta.contextLabel }}</span>
+            </div>
+            <h1>{{ activity.name }}</h1>
+          </div>
+        </div>
+        <p class="activity-subtitle">
+          {{ activity.contextMode.label() }}
+          · Créée le {{ activity.createdAt|date('d/m/Y') }}
+          · Groupe {{ group.name }}
+        </p>
+        {% if canManage %}
+          <div class="session-flow-help" role="note" aria-label="Suite du parcours activité">
+            <p><strong>Étape suivante :</strong> crée une session pour cette activité, elle sera déjà sélectionnée dans le formulaire.</p>
+          </div>
+        {% endif %}
+      </div>
+      <div class="activity-header-actions">
+        <form method="get" class="season-filter-form">
+          <label for="activity-season" class="season-filter-label">Saison</label>
+          <select id="activity-season" name="season" onchange="this.form.submit()">
+            {% for key, label in seasonOptions %}
+              <option value="{{ key }}" {{ key == selectedSeason ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% if canManage %}
+          <a class="btn btn-primary" href="{{ path('session_create', { id: group.id, activity: activity.id }) }}">Créer une session</a>
+          <a class="btn btn-secondary" href="{{ path('activity_edit', { groupId: group.id, activityId: activity.id }) }}">Modifier l'activité</a>
+        {% endif %}
+        <a class="btn btn-secondary" href="{{ path('activity_list', { id: group.id }) }}">Retour aux activités</a>
+      </div>
+    </header>
+
+    <section class="activity-tracker-overview">
+      <article class="activity-tracker-overview-card">
+        <p>Saison active</p>
+        <strong>{{ selectedSeasonLabel }}</strong>
+        <span>{{ activityOverview.isFilteredSeason ? 'Filtre appliqué' : 'Vue globale' }}</span>
+      </article>
+      <article class="activity-tracker-overview-card">
+        <p>Sessions visibles</p>
+        <strong>{{ activityOverview.sessionsInSelection }}</strong>
+        <span>dans le tracker</span>
+      </article>
+      <article class="activity-tracker-overview-card">
+        <p>Entrées visibles</p>
+        <strong>{{ activityOverview.entriesInSelection }}</strong>
+        <span>résultats saisis</span>
+      </article>
+      <article class="activity-tracker-overview-card">
+        <p>Participants</p>
+        <strong>{{ activityOverview.participantsInSelection }}</strong>
+        <span>joueurs / équipes classés</span>
+      </article>
+    </section>
+
+    {% if quickActions is not empty %}
+      <section class="activity-tracker-quick-actions" aria-label="Actions rapides">
+        <p>Actions rapides :</p>
+        <div class="activity-tracker-quick-actions-list">
+          {% for action in quickActions %}
+            <a class="btn {{ action.variant == 'primary' ? 'btn-primary' : 'btn-secondary' }} btn-sm" href="{{ path(action.route, action.params) }}">{{ action.label }}</a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section>
+      <div class="activity-tracker-stats-grid">
+        {% for stat in activityStats %}
+          <article class="activity-tracker-stat-card">
+            <p>{{ stat.label }}</p>
+            <strong>{{ stat.value }}</strong>
+            <span>{{ stat.meta }}</span>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% if allTimeRecords is not empty or seasonRecords is not empty %}
+      <section class="activity-records-layout">
+        {% if allTimeRecords is not empty %}
+          <article class="activity-records-panel">
+            <div class="activity-records-head">
+              <h2>Records all-time</h2>
+              <span>Toute l'historique</span>
+            </div>
+            <div class="activity-records-grid">
+              {% for record in allTimeRecords %}
+                <article class="activity-record-card">
+                  <p>{{ record.title }}</p>
+                  <strong>{{ record.value }}</strong>
+                  <span>{{ record.meta }}</span>
+                </article>
+              {% endfor %}
+            </div>
+          </article>
+        {% endif %}
+
+        {% if seasonRecords is not empty and recordsSeasonLabel %}
+          <article class="activity-records-panel activity-records-panel-season">
+            <div class="activity-records-head">
+              <h2>Records de saison</h2>
+              <span>{{ recordsSeasonLabel }}{{ recordsSeasonUsesSelection ? ' · filtre actif' : ' · dernière saison jouée' }}</span>
+            </div>
+            <div class="activity-records-grid">
+              {% for record in seasonRecords %}
+                <article class="activity-record-card">
+                  <p>{{ record.title }}</p>
+                  <strong>{{ record.value }}</strong>
+                  <span>{{ record.meta }}</span>
+                </article>
+              {% endfor %}
+            </div>
+          </article>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if selectedSeason != 'all' %}
+      <section class="activity-season-panel">
+        <div class="activity-season-panel-head">
+          <h2>Résumé de saison</h2>
+          <span class="activity-mode-badge">{{ selectedSeasonLabel }}</span>
+        </div>
+
+        {% if seasonTopThree is empty %}
+          <p class="text-muted">Aucune donnée sur cette saison.</p>
+        {% else %}
+          <ol class="activity-season-top3">
+            {% for row in seasonTopThree %}
+              <li>
+                <span class="activity-tracker-rank">{{ loop.index }}</span>
+                <strong>{{ row.label }}</strong>
+                {% if isMatchMode %}
+                  <span>MMR {{ row.mmr }} · {{ row.wins }}V/{{ row.draws }}N/{{ row.losses }}D</span>
+                {% else %}
+                  <span>{{ row.pointsTotal|number_format(0, ',', ' ') }} pts · moyenne {{ row.averageScore|number_format(1, ',', ' ') }}</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ol>
+          <p class="text-muted">Snapshot saisonnier basé sur les sessions filtrées (figé par période sélectionnée).</p>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if highlights is not empty %}
+      <section>
+        <div class="activity-tracker-highlights-grid">
+          {% for item in highlights %}
+            <article class="activity-tracker-highlight-card">
+              <p class="activity-tracker-highlight-title">{{ item.title }}</p>
+              <strong>{{ item.value }}</strong>
+              <span>{{ item.meta }}</span>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <div class="activity-tracker-layout">
+      <section class="activity-tracker-panel">
+        <div class="activity-tracker-panel-head">
+          <h2>{{ isMatchMode ? 'Classement compétition' : 'Classement cumulé' }}</h2>
+          <span>{{ leaderboard|length }} profil{{ leaderboard|length > 1 ? 's' : '' }}</span>
+        </div>
+
+        {% if leaderboard is empty %}
+          <p class="text-muted">Aucune donnée exploitable pour cette activité pour le moment.</p>
+        {% else %}
+          <div class="activity-tracker-table-wrap">
+            <table class="activity-tracker-table">
+              <thead>
+                {% if isMatchMode %}
+                  <tr>
+                    <th>#</th>
+                    <th>Joueur / équipe</th>
+                    <th>MMR</th>
+                    <th>Matchs</th>
+                    <th>Bilan</th>
+                    <th>Winrate</th>
+                    <th>Diff.</th>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <th>#</th>
+                    <th>Participant</th>
+                    <th>Sessions</th>
+                    <th>Entrées</th>
+                    <th>Total</th>
+                    <th>Moyenne</th>
+                    <th>Best</th>
+                  </tr>
+                {% endif %}
+              </thead>
+              <tbody>
+                {% for row in leaderboard %}
+                  <tr>
+                    <td><span class="activity-tracker-rank">{{ row.rank }}</span></td>
+                    <td>{{ row.label }}</td>
+                    {% if isMatchMode %}
+                      <td>
+                        {{ row.mmr }}
+                        <span class="text-muted">({{ row.mmrDelta > 0 ? '+' : '' }}{{ row.mmrDelta }})</span>
+                      </td>
+                      <td>{{ row.matchesCount }}</td>
+                      <td>{{ row.wins }}V · {{ row.draws }}N · {{ row.losses }}D</td>
+                      <td>{{ row.winRate|number_format(1, ',', ' ') }}%</td>
+                      <td>{{ row.scoreDiff > 0 ? '+' : '' }}{{ row.scoreDiff }}</td>
+                    {% else %}
+                      <td>{{ row.sessionsPlayed }}</td>
+                      <td>{{ row.entriesCount }}</td>
+                      <td>{{ row.pointsTotal|number_format(0, ',', ' ') }}</td>
+                      <td>{{ row.averageScore|number_format(1, ',', ' ') }}</td>
+                      <td>{{ row.bestScore|number_format(0, ',', ' ') }}</td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="activity-tracker-panel">
+        <div class="activity-tracker-panel-head">
+          <h2>Historique des sessions</h2>
+          <span>{{ sessionSummaries|length }} session{{ sessionSummaries|length > 1 ? 's' : '' }}</span>
+        </div>
+
+        {% if sessionSummaries is empty %}
+          <div class="activity-empty">
+            <p>Aucune session pour cette activité.</p>
+            {% if canManage %}
+              <a class="btn btn-secondary" href="{{ path('session_create', { id: group.id, activity: activity.id }) }}">Créer la première session</a>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="activity-tracker-session-list">
+            {% for item in sessionSummaries %}
+              <article class="activity-tracker-session-card">
+                <div class="activity-tracker-session-top">
+                  <p class="activity-tracker-session-date">{{ item.session.playedAt|date('d/m/Y H:i') }}</p>
+                  <span class="activity-mode-badge">{{ item.entriesCount }} entrée{{ item.entriesCount > 1 ? 's' : '' }}</span>
+                </div>
+                <h3>
+                  <a href="{{ path('session_show', { groupId: group.id, sessionId: item.session.id }) }}">
+                    {{ item.session.title ?: 'Session ' ~ activity.name ~ ' du ' ~ item.session.playedAt|date('d/m/Y') }}
+                  </a>
+                </h3>
+                <p class="activity-tracker-session-headline">{{ item.headline }}</p>
+                <p class="activity-tracker-session-meta">{{ item.meta }}</p>
+                <div class="activity-tracker-session-actions">
+                  <a class="btn btn-secondary btn-sm" href="{{ path('session_show', { groupId: group.id, sessionId: item.session.id }) }}">Voir la session</a>
+                  {% if canManage %}
+                    <a class="btn btn-secondary btn-sm" href="{{ path('session_edit', { groupId: group.id, sessionId: item.session.id }) }}">Modifier</a>
+                  {% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </section>
+{% endblock %}

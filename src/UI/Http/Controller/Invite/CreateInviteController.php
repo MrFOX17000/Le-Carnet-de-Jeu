@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class CreateInviteController extends AbstractController
 {
@@ -35,7 +36,7 @@ final class CreateInviteController extends AbstractController
             $email = $request->request->getString('email');
 
             if ($email === '') {
-                $this->addFlash('error', 'Email is required.');
+                $this->addFlash('error', 'L\'adresse e-mail est obligatoire.');
 
                 return $this->redirectToRoute('invite_create', [
                     'id' => $group->getId(),
@@ -52,10 +53,14 @@ final class CreateInviteController extends AbstractController
 
                 $result = $this->handler->handle($command);
 
+                $inviteUrl = $this->generateUrl('invite_accept', [
+                    'token' => $result->getToken(),
+                ], UrlGeneratorInterface::ABSOLUTE_URL);
+
                 $this->addFlash('success', sprintf(
-                    'Invitation created for %s. Share this token: %s',
+                    'Invitation créée pour %s. Partagez ce lien d\'accès au groupe : %s',
                     $email,
-                    $result->getToken()
+                    $inviteUrl
                 ));
 
                 return $this->redirectToRoute('group_show', [

@@ -3,24 +3,72 @@
 {% block title %}Mes groupes{% endblock %}
 
 {% block body %}
-<section>
-  <div class="page-title-row">
-    <h1>Mes groupes</h1>
-    <a class="btn btn-secondary" href="{{ path('group_create_form') }}">Nouveau groupe</a>
-  </div>
+<section class="groups-page">
+  <header class="groups-header">
+    <div>
+      <p class="groups-kicker">Mes espaces de jeu</p>
+      <h1>Mes groupes</h1>
+      <p class="groups-subtitle">Retrouve tes groupes actifs, le rôle de chaque membre et le nombre de sessions en un coup d'œil.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ path('group_create_form') }}">Nouveau groupe</a>
+  </header>
 
-  {% if memberships is empty %}
-    <div class="panel narrow">
-      <p>Aucun groupe pour le moment. Creez votre premier groupe pour demarrer.</p>
+  {% if groupsData is empty %}
+    <div class="groups-empty">
+      <h2>Aucun groupe pour le moment</h2>
+      <p>Les groupes sont le point de départ de toute l'expérience — sessions, activités et scores vivent ici.</p>
+      <ol class="groups-empty-steps">
+        <li>Crée ton premier groupe</li>
+        <li>Invite tes coéquipiers</li>
+        <li>Lance une session de jeu</li>
+      </ol>
+      <a class="btn btn-primary" href="{{ path('group_create_form') }}">Créer mon premier groupe</a>
     </div>
   {% else %}
-    <div class="card-list">
-      {% for membership in memberships %}
-        <article class="panel">
-          <h2>
-            <a href="{{ path('group_show', {id: membership.group.id}) }}">{{ membership.group.name }}</a>
-          </h2>
-          <p>Role: <strong>{{ membership.role.value|upper }}</strong></p>
+    <div class="groups-grid">
+      {% for data in groupsData %}
+        {% set group = data.group %}
+        {% set membership = data.membership %}
+        <article class="group-card">
+          <a class="group-card-link" href="{{ path('group_show', {id: group.id}) }}" aria-label="Voir le groupe {{ group.name }}"></a>
+          <div class="group-card-top">
+            <h2>{{ group.name }}</h2>
+            <span class="group-role">{{ membership.role.value|upper }}</span>
+          </div>
+
+          <div class="group-counters">
+            <div class="group-counter">
+              <p class="counter-label">Membres</p>
+              <p class="counter-value">{{ group.groupMembers|length }}</p>
+            </div>
+            <div class="group-counter">
+              <p class="counter-label">Activités</p>
+              <p class="counter-value">{{ data.activitiesCount }}</p>
+            </div>
+            <div class="group-counter">
+              <p class="counter-label">Sessions</p>
+              <p class="counter-value">{{ data.sessionsCount }}</p>
+            </div>
+            <div class="group-counter">
+              <p class="counter-label">Dernière partie</p>
+              <p class="counter-value group-counter-date">
+                {% if data.lastPlayedAt %}
+                  {{ data.lastPlayedAt|date('d/m/Y') }}
+                {% else %}
+                  <span class="text-muted-sm">—</span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          {% if data.topActivity %}
+            <p class="group-card-top-activity">🎮 Jeu phare : <strong>{{ data.topActivity }}</strong></p>
+          {% endif %}
+
+          <div class="group-card-actions">
+            <a class="btn btn-secondary btn-sm" href="{{ path('group_show', {id: group.id}) }}">Voir le détail</a>
+            <a class="btn btn-secondary btn-sm" href="{{ path('session_create', {id: group.id}) }}">Nouvelle session</a>
+          </div>
         </article>
       {% endfor %}
     </div>

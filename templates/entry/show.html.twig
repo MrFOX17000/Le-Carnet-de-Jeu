@@ -3,62 +3,63 @@
 {% block title %}Entrée - {{ session.activity.name }}{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<section class="entry-show-page">
+    <header class="entry-show-header">
         <div>
-            <h1>{{ entry.label ? entry.label : "Entrée de " ~ entry.createdBy.email }}</h1>
-            <p class="text-muted">
-                Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y H:i') }}
-            </p>
+            <p class="entry-kicker">{{ group.name }} · <a href="{{ path('session_show', {groupId: group.id, sessionId: session.id}) }}">{{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}</a></p>
+            <h1>{{ entry.label ? entry.label : (entry.type.value == 'match' ? 'Match' : 'Tour de classement') }}</h1>
+            <p class="entry-show-meta">{{ entry.type.value == 'match' ? 'Match' : 'Classement' }} · {{ session.activity.name }}</p>
         </div>
-        <a href="{{ path('session_show', {'groupId': group.id, 'sessionId': session.id}) }}" class="btn btn-secondary">Retour</a>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Résultats</h5>
-        </div>
-        <div class="card-body">
-            {% if entry.type.value == 'match' and entry.entryMatch %}
-                <div class="d-flex align-items-center justify-content-center gap-3 fs-4">
-                    <strong>{{ entry.entryMatch.homeName }}</strong>
-                    <span class="badge bg-dark">{{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }}</span>
-                    <strong>{{ entry.entryMatch.awayName }}</strong>
-                </div>
-            {% elseif entry.scores|length > 0 %}
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Rang</th>
-                                <th>Participant</th>
-                                <th class="text-end">Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% set sortedScores = entry.scores|sort((a, b) => b.score <=> a.score) %}
-                            {% for idx, score in sortedScores %}
-                                <tr>
-                                    <td>
-                                        <strong>#{{ idx + 1 }}</strong>
-                                    </td>
-                                    <td>{{ score.participantName }}</td>
-                                    <td class="text-end">
-                                        <span class="badge bg-primary">{{ score.score }}</span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="text-muted mb-0">Aucun score enregistré</p>
+        <div class="entry-show-actions">
+            <a href="{{ path('session_show', {groupId: group.id, sessionId: session.id}) }}" class="btn btn-secondary">← Retour à la session</a>
+            {% if canManage %}
+                <form method="post" action="{{ path('entry_delete', {groupId: group.id, sessionId: session.id, entryId: entry.id}) }}" onsubmit="return confirm('Supprimer cette entrée ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-entry-' ~ entry.id) }}">
+                    <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+                </form>
             {% endif %}
         </div>
-    </div>
+    </header>
 
-    <div class="mt-4 text-muted small">
-        <p>Créée par {{ entry.createdBy.email }} le {{ entry.createdAt|date('d/m/Y H:i') }}</p>
-    </div>
-</div>
+    <article class="entry-result-card">
+        <h2>Résultats</h2>
+        {% if entry.type.value == 'match' and entry.entryMatch %}
+            {% set homeWon = entry.entryMatch.homeScore > entry.entryMatch.awayScore %}
+            {% set awayWon = entry.entryMatch.awayScore > entry.entryMatch.homeScore %}
+            {% set isDraw = entry.entryMatch.homeScore == entry.entryMatch.awayScore %}
+            <div class="entry-match-board">
+                <div class="entry-match-side {{ homeWon ? 'winner' : '' }}">
+                    {% if homeWon %}<span class="entry-match-result-label">✓ Gagnant</span>{% elseif isDraw %}<span class="entry-match-result-label entry-match-result-draw">= Égalité</span>{% endif %}
+                    <p class="team-name">{{ entry.entryMatch.homeName }}</p>
+                    <p class="team-score">{{ entry.entryMatch.homeScore }}</p>
+                </div>
+                <p class="match-separator">—</p>
+                <div class="entry-match-side {{ awayWon ? 'winner' : '' }}">
+                    {% if awayWon %}<span class="entry-match-result-label">✓ Gagnant</span>{% elseif isDraw %}<span class="entry-match-result-label entry-match-result-draw">= Égalité</span>{% endif %}
+                    <p class="team-name">{{ entry.entryMatch.awayName }}</p>
+                    <p class="team-score">{{ entry.entryMatch.awayScore }}</p>
+                </div>
+            </div>
+        {% elseif entry.scores|length > 0 %}
+            {% set sortedScores = entry.scores|sort((a, b) => b.score <=> a.score) %}
+            {% set medals = ['🥇', '🥈', '🥉'] %}
+            <ol class="entry-score-podium">
+                {% for idx, score in sortedScores %}
+                    <li class="entry-score-row {{ idx == 0 ? 'rank-1' : (idx == 1 ? 'rank-2' : (idx == 2 ? 'rank-3' : '')) }}">
+                        <span class="entry-score-rank">{{ medals[idx] is defined ? medals[idx] : '#' ~ (idx + 1) }}</span>
+                        <span class="entry-score-name">{{ score.participantName }}</span>
+                        <strong class="entry-score-value">{{ score.score }}</strong>
+                    </li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p class="entry-show-empty">Aucun score enregistré.</p>
+        {% endif %}
+    </article>
+
+    <p class="entry-meta">
+        Créée par <strong>{{ entry.createdBy.displayName ?? entry.createdBy.email }}</strong>
+        le {{ entry.createdAt|date('d/m/Y à H:i') }}
+    </p>
+</section>
 {% endblock %}

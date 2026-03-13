@@ -46,7 +46,7 @@ class RegistrationController extends AbstractController
                 (new TemplatedEmail())
                     ->from(new Address('verification@le-carnet.fr', 'Le Carnet'))
                     ->to((string) $user->getEmail())
-                    ->subject('Please Confirm your Email')
+                    ->subject('Confirmez votre adresse e-mail')
                     ->htmlTemplate('registration/confirmation_email.html.twig')
             );
 
@@ -55,8 +55,13 @@ class RegistrationController extends AbstractController
             return $security->login($user, AppAuthenticator::class, 'main');
         }
 
+        $googleClientId = $_ENV['GOOGLE_CLIENT_ID'] ?? $_SERVER['GOOGLE_CLIENT_ID'] ?? '';
+        $googleClientSecret = $_ENV['GOOGLE_CLIENT_SECRET'] ?? $_SERVER['GOOGLE_CLIENT_SECRET'] ?? '';
+        $googleOauthEnabled = $googleClientId !== '' && $googleClientSecret !== '';
+
         return $this->render('registration/register.html.twig', [
             'registrationForm' => $form,
+            'google_oauth_enabled' => $googleOauthEnabled,
         ]);
     }
 
@@ -77,8 +82,8 @@ class RegistrationController extends AbstractController
         }
 
         // @TODO Change the redirect on success and handle or remove the flash message in your templates
-        $this->addFlash('success', 'Your email address has been verified.');
+        $this->addFlash('success', 'Votre adresse e-mail a été vérifiée. Bienvenue !');
 
-        return $this->redirectToRoute('app_register');
+        return $this->redirectToRoute('dashboard');
     }
 }

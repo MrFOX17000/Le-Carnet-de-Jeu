@@ -1,0 +1,10 @@
+# Security translations
+'An authentication exception occurred.': 'Une erreur d''authentification s''est produite.'
+'Authentication credentials could not be verified.': 'Les identifiants fournis ne sont pas valides.'
+'Invalid credentials.': 'Identifiants invalides.'
+'Invalid CSRF token.': 'Jeton CSRF invalide.'
+'Cookie has already been used by someone else.': 'Ce cookie a déjà été utilisé par quelqu''un d''autre.'
+'Not privileged to request the resource.': 'Vous n''avez pas les permissions nécessaires pour accéder à cette ressource.'
+'Invalid token.': 'Jeton invalide.'
+'Username could not be found.': 'Cet email n''existe pas.'
+'Too many failed login attempts, please try again in %minutes% minute.|Too many failed login attempts, please try again in %minutes% minutes.': 'Trop de tentatives échouées. Veuillez réessayer dans %minutes% minute.|Trop de tentatives échouées. Veuillez réessayer dans %minutes% minutes.'

@@ -1,14 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Carnet de Jeu - Tracker de sessions gaming{% endblock %}
-{% block body_class %}{% if variant == 'gaming' %}theme-gaming{% else %}theme-classic{% endif %}{% endblock %}
+{% block title %}Carnet de Jeu - Suivi de sessions en groupe{% endblock %}
 
 {% block body %}
-<div class="home-variant{% if variant == 'gaming' %} home-gaming{% else %} home-classic{% endif %}">
-<div class="variant-switch" data-reveal>
-    <a class="variant-link{% if variant == 'classic' %} active{% endif %}" href="{{ path('app_home') }}">Style classique</a>
-    <a class="variant-link{% if variant == 'gaming' %} active{% endif %}" href="{{ path('app_home', {variant: 'gaming'}) }}">Style gaming</a>
-</div>
+<div class="home-variant home-classic">
 
 <section class="hero-premium" data-reveal>
     <div class="hero-content">
@@ -20,68 +15,64 @@
 
         <div class="hero-actions">
             {% if app.user %}
-                <a class="btn btn-primary btn-large" href="{{ path('dashboard') }}">Acceder au dashboard</a>
+                <a class="btn btn-primary btn-large" href="{{ path('dashboard') }}">Accéder au tableau de bord</a>
                 <a class="btn btn-secondary btn-large" href="{{ path('group_index') }}">Voir mes groupes</a>
             {% else %}
-                <a class="btn btn-primary btn-large" href="{{ path('app_register') }}">Creer un compte</a>
+                <a class="btn btn-primary btn-large" href="{{ path('app_register') }}">Créer un compte</a>
                 <a class="btn btn-secondary btn-large" href="{{ path('app_login') }}">Se connecter</a>
+                <a class="btn btn-secondary btn-large" href="{{ path('app_demo_public') }}">Voir un exemple complet</a>
             {% endif %}
         </div>
     </div>
 
     <div class="hero-visual">
-        <picture>
-            <source srcset="{{ asset('images/brand/logo-carnet-de-jeu.webp') }}" type="image/webp">
-            <source srcset="{{ asset('images/brand/logo-carnet-de-jeu.png') }}" type="image/png">
-            <img class="hero-logo" src="{{ asset('images/brand/logo-carnet-de-jeu.png') }}" alt="Carnet de Jeu">
-        </picture>
+        <img class="hero-image" src="{{ asset('images/jeu.webp') }}" alt="Illustration Carnet de Jeu">
     </div>
 </section>
 
 <section class="use-cases" data-reveal>
     <h2 class="section-title">Pour tous vos jeux</h2>
-    <p class="section-subtitle">Vos visuels sont en fond, avec un texte lisible et impactant.</p>
 
     <div class="use-case-grid" data-reveal>
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/chess.webp') }}'), url('{{ asset('images/use-cases/chess.jpg') }}'), url('{{ asset('images/use-cases/chess.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/chess.webp') }}')">
             <div class="use-case-overlay">
                 <h3>Jeux de plateau</h3>
-                <p>Echecs, Catan, Carcassonne: suivez les scores et les performances.</p>
+                <p>Échecs, Catan, Carcassonne: suivez les scores et les performances.</p>
             </div>
         </article>
 
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/cards.webp') }}'), url('{{ asset('images/use-cases/cards.jpg') }}'), url('{{ asset('images/use-cases/cards.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/cards.webp') }}')">
             <div class="use-case-overlay">
                 <h3>Jeux de cartes</h3>
-                <p>Magic, Poker, Tarot: enregistrez les parties et les resultats.</p>
+                <p>Magic, Poker, Tarot: enregistrez les parties et les résultats.</p>
             </div>
         </article>
 
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/esports.webp') }}'), url('{{ asset('images/use-cases/esports.jpg') }}'), url('{{ asset('images/use-cases/esports.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/esports.webp') }}')">
             <div class="use-case-overlay">
                 <h3>Esport et gaming</h3>
-                <p>Rocket League, CS2, Valorant: centralisez vos stats d'equipe.</p>
+                <p>Rocket League, CS2, Valorant: centralisez vos stats d'équipe.</p>
             </div>
         </article>
 
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/sports.webp') }}'), url('{{ asset('images/use-cases/sports.jpg') }}'), url('{{ asset('images/use-cases/sports.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/sports.webp') }}')">
             <div class="use-case-overlay">
-                <h3>Sports competitifs</h3>
-                <p>Foot, tennis, basket: journalisez matchs, equipes et statistiques.</p>
+                <h3>Sports compétitifs</h3>
+                <p>Foot, tennis, basket: journalisez matchs, équipes et statistiques.</p>
             </div>
         </article>
 
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/rpg.webp') }}'), url('{{ asset('images/use-cases/rpg.jpg') }}'), url('{{ asset('images/use-cases/rpg.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/rpg.webp') }}')">
             <div class="use-case-overlay">
-                <h3>Jeux de role</h3>
+                <h3>Jeux de rôle</h3>
                 <p>D&D, Pathfinder et autres: gardez l'historique de vos campagnes.</p>
             </div>
         </article>
 
-        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/escape.webp') }}'), url('{{ asset('images/use-cases/escape.jpg') }}'), url('{{ asset('images/use-cases/escape.svg') }}')">
+        <article class="use-case-card" data-reveal style="background-image: url('{{ asset('images/use-cases/escape.webp') }}')">
             <div class="use-case-overlay">
                 <h3>Escape games</h3>
-                <p>Temps, enigmes resolues, progression: tout est centralise au meme endroit.</p>
+                <p>Temps, énigmes résolues, progression: tout est centralisé au même endroit.</p>
             </div>
         </article>
     </div>
@@ -91,92 +82,109 @@
     <h2 class="section-title">Pourquoi choisir Carnet de Jeu</h2>
     <div class="why-grid">
         <article class="why-card">
-            <h3>Simple a prendre en main</h3>
-            <p>Ajoutez des parties en quelques clics, sans ecran technique inutile.</p>
+            <h3>Simple à prendre en main</h3>
+            <p>Ajoutez des parties en quelques clics, sans écran technique inutile.</p>
         </article>
         <article class="why-card">
             <h3>Collaboration par groupe</h3>
-            <p>Chaque equipe garde son espace, ses membres et son historique.</p>
+            <p>Chaque équipe garde son espace, ses membres et son historique.</p>
         </article>
         <article class="why-card">
             <h3>Historique clair</h3>
-            <p>Retrouvez facilement les resultats passes et l'evolution de vos sessions.</p>
+            <p>Retrouvez facilement les résultats passés et l'évolution de vos sessions.</p>
         </article>
         <article class="why-card">
-            <h3>Accessible partout</h3>
-            <p>Utilisable sur ordinateur, tablette et mobile avec un rendu coherent.</p>
+            <h3>Partage public en lecture seule <span class="help-tip" title="Lecture seule = les visiteurs peuvent consulter sans modifier les données.">?</span></h3>
+            <p>Diffusez les résultats via un lien sans exposer les droits d'édition.</p>
+        </article>
+        <article class="why-card">
+            <h3>Statistiques actionnables</h3>
+            <p>Visualisez les tendances et performances pour mieux animer vos groupes.</p>
+        </article>
+        <article class="why-card">
+            <h3>Fiable sur mobile et desktop</h3>
+            <p>Un rendu cohérent sur tous les écrans pour saisir une session n'importe où.</p>
         </article>
     </div>
 </section>
 
 <section class="how-it-works" data-reveal>
-    <h2 class="section-title">Comment ca marche</h2>
+    <h2 class="section-title">Comment ça marche</h2>
     <div class="steps">
         <div class="step">
             <div class="step-number">1</div>
-            <h3>Creez un groupe</h3>
-            <p>Donnez un nom et invitez les joueurs.</p>
+            <h3>Créer son compte</h3>
+            <p>Inscrivez-vous en quelques secondes pour accéder à votre espace.</p>
         </div>
         <div class="step-arrow">→</div>
         <div class="step">
             <div class="step-number">2</div>
-            <h3>Ajoutez les sessions</h3>
-            <p>Scores simples ou details complets, selon vos besoins.</p>
+            <h3>Créer un groupe</h3>
+            <p>Ajoutez un nom, invitez des membres et préparez votre cadre de jeu.</p>
         </div>
         <div class="step-arrow">→</div>
         <div class="step">
             <div class="step-number">3</div>
-            <h3>Suivez vos stats</h3>
-            <p>Visualisez les performances de votre groupe dans le temps.</p>
+            <h3>Ajouter les sessions</h3>
+            <p>Saisissez scores simples, matchs et détails de parties.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Suivre les stats</h3>
+            <p>Analysez l'historique de vos résultats pour progresser en continu.</p>
         </div>
     </div>
 </section>
 
 <section class="cta-section" data-reveal>
     <div class="cta-content">
-        <h2>Pret a commencer?</h2>
-        <p>Creez votre premier groupe et commencez a enregistrer vos parties.</p>
+        <h2>Prêt à commencer ?</h2>
+        <p>Créez votre premier groupe et commencez à enregistrer vos parties.</p>
         {% if not app.user %}
-            <a class="btn btn-primary btn-xl" href="{{ path('app_register') }}">Creer mon compte</a>
+            <a class="btn btn-primary btn-xl" href="{{ path('app_register') }}">Créer mon compte</a>
+            <a class="btn btn-secondary btn-xl" href="{{ path('app_demo_public') }}">Explorer un exemple complet</a>
         {% else %}
-            <a class="btn btn-primary btn-xl" href="{{ path('group_create_form') }}">Creer un groupe</a>
+            <a class="btn btn-primary btn-xl" href="{{ path('group_create_form') }}">Créer un groupe</a>
         {% endif %}
     </div>
 </section>
 
 <section class="faq-section" data-reveal>
-    <h2 class="section-title">Questions frequentes</h2>
+    <h2 class="section-title">Questions fréquentes</h2>
     <div class="faq-container">
         <details class="faq-item">
-            <summary class="faq-question"><span>C'est gratuit?</span><span class="faq-toggle">+</span></summary>
+            <summary class="faq-question"><span>C'est gratuit ?</span><span class="faq-toggle">+</span></summary>
             <div class="faq-answer"><p>Oui. Toutes les fonctions principales sont disponibles sans paiement.</p></div>
         </details>
         <details class="faq-item">
-            <summary class="faq-question"><span>Mes donnees sont securisees?</span><span class="faq-toggle">+</span></summary>
-            <div class="faq-answer"><p>Oui. Chaque groupe est isole et accessible seulement a ses membres.</p></div>
+            <summary class="faq-question"><span>Mes données sont sécurisées ?</span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Oui. Chaque groupe est isolé et accessible seulement à ses membres.</p></div>
         </details>
         <details class="faq-item">
-            <summary class="faq-question"><span>Je peux partager sans compte?</span><span class="faq-toggle">+</span></summary>
+            <summary class="faq-question"><span>Je peux partager sans compte ?</span><span class="faq-toggle">+</span></summary>
             <div class="faq-answer"><p>Oui, via des liens publics en lecture seule.</p></div>
         </details>
-    </div>
-</section>
-
-<section class="social-proof" data-reveal>
-    <h2 class="section-title">Une plateforme pensee pour vos groupes</h2>
-    <div class="proof-grid">
-        <div class="proof-item">
-            <div class="proof-label">Creation de groupe rapide</div>
-        </div>
-        <div class="proof-item">
-            <div class="proof-label">Saisie des sessions simplifiee</div>
-        </div>
-        <div class="proof-item">
-            <div class="proof-label">Partage lisible des resultats</div>
-        </div>
-        <div class="proof-item">
-            <div class="proof-label">Interface adaptee mobile et desktop</div>
-        </div>
+        <details class="faq-item">
+            <summary class="faq-question"><span>Comment inviter un nouveau membre dans mon groupe ?</span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Depuis le groupe, ouvrez la gestion des invitations et envoyez un lien à l'e-mail du joueur.</p></div>
+        </details>
+        <details class="faq-item">
+            <summary class="faq-question"><span>Peut-on suivre plusieurs jeux dans un même groupe ?</span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Oui, vous pouvez créer autant d'activités que nécessaire puis rattacher vos sessions à chacune.</p></div>
+        </details>
+        <details class="faq-item">
+            <summary class="faq-question"><span>Quelle différence entre score simple et match ? <span class="help-tip" title="Score simple = classement multi-participants. Match = duel entre deux équipes/joueurs.">?</span></span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Le score simple permet de classer plusieurs participants; le match suit une opposition directe domicile/extérieur.</p></div>
+        </details>
+        <details class="faq-item">
+            <summary class="faq-question"><span>Est-ce que je peux utiliser Carnet de Jeu sur mobile ?</span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Oui, l'interface est responsive pour créer et consulter vos sessions sur smartphone, tablette et desktop.</p></div>
+        </details>
+        <details class="faq-item">
+            <summary class="faq-question"><span>Mes membres peuvent-ils modifier les résultats ?</span><span class="faq-toggle">+</span></summary>
+            <div class="faq-answer"><p>Les permissions dépendent du rôle dans le groupe. Les liens partagés restent toujours en lecture seule.</p></div>
+        </details>
     </div>
 </section>
 

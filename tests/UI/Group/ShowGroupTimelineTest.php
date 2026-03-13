@@ -10,6 +10,7 @@ use App\Entity\EntryMatch;
 use App\Entity\EntryScore;
 use App\Entity\GameGroup;
 use App\Entity\GroupMember;
+use App\Entity\Invite;
 use App\Entity\Session;
 use App\Entity\User;
 use App\Tests\DbWebTestCase;
@@ -28,9 +29,18 @@ final class ShowGroupTimelineTest extends DbWebTestCase
         $client->request('GET', '/groups/'.$group->getId());
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h2', 'Timeline des sessions');
+        self::assertStringContainsString('Timeline des sessions', $client->getResponse()->getContent());
         self::assertStringContainsString('Timeline Activity', $client->getResponse()->getContent());
         self::assertStringContainsString('Entries: 2', $client->getResponse()->getContent());
+        self::assertStringContainsString('Invitations en attente', $client->getResponse()->getContent());
+        self::assertStringContainsString('Historique des invitations', $client->getResponse()->getContent());
+        self::assertStringContainsString('invitee@test.com', $client->getResponse()->getContent());
+        self::assertStringContainsString('accepted@test.com', $client->getResponse()->getContent());
+        self::assertStringContainsString('expired@test.com', $client->getResponse()->getContent());
+        self::assertStringContainsString('Acceptée le', $client->getResponse()->getContent());
+        self::assertStringContainsString('Expirée le', $client->getResponse()->getContent());
+        self::assertStringContainsString('/invites/', $client->getResponse()->getContent());
+        self::assertStringContainsString('/groups/'.$group->getId().'/seasons', $client->getResponse()->getContent());
         self::assertSelectorExists('a[href="/groups/'.$group->getId().'/sessions/'.$session->getId().'"]');
     }
 
@@ -100,7 +110,40 @@ final class ShowGroupTimelineTest extends DbWebTestCase
         $match->setAwayScore(2);
         $match->setEntry($matchEntry);
 
+        $invite = new Invite(GroupRole::MEMBER);
+        $invite->setEmail('invitee@test.com');
+        $invite->setToken(bin2hex(random_bytes(16)));
+        $invite->setExpiresAt(new \DateTimeImmutable('+7 days'));
+        $invite->setGroup($group);
+        $invite->setCreatedBy($owner);
+
+        $group->addInvite($invite);
+        $owner->addInvite($invite);
+
+        $acceptedInvite = new Invite(GroupRole::MEMBER);
+        $acceptedInvite->setEmail('accepted@test.com');
+        $acceptedInvite->setToken(bin2hex(random_bytes(16)));
+        $acceptedInvite->setExpiresAt(new \DateTimeImmutable('+3 days'));
+        $acceptedInvite->setAcceptedAt(new \DateTimeImmutable('-1 day'));
+        $acceptedInvite->setGroup($group);
+        $acceptedInvite->setCreatedBy($owner);
+
+        $expiredInvite = new Invite(GroupRole::MEMBER);
+        $expiredInvite->setEmail('expired@test.com');
+        $expiredInvite->setToken(bin2hex(random_bytes(16)));
+        $expiredInvite->setExpiresAt(new \DateTimeImmutable('-2 days'));
+        $expiredInvite->setGroup($group);
+        $expiredInvite->setCreatedBy($owner);
+
+        $group->addInvite($acceptedInvite);
+        $owner->addInvite($acceptedInvite);
+        $group->addInvite($expiredInvite);
+        $owner->addInvite($expiredInvite);
+
         $em->persist($matchEntry);
+        $em->persist($invite);
+        $em->persist($acceptedInvite);
+        $em->persist($expiredInvite);
         $em->flush();
 
         return [$owner, $group, $session];

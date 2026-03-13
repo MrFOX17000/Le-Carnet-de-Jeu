@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Domain\Activity\ContextMode;
 use App\Repository\ActivityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -18,6 +19,9 @@ class Activity
 
     #[ORM\Column(length: 120)]
     private ?string $name = null;
+
+    #[ORM\Column(length: 50, enumType: ContextMode::class)]
+    private ContextMode $contextMode = ContextMode::RANKING;
 
     #[ORM\ManyToOne(inversedBy: 'activities')]
     #[ORM\JoinColumn(nullable: false)]
@@ -55,6 +59,18 @@ class Activity
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getContextMode(): ContextMode
+    {
+        return $this->contextMode;
+    }
+
+    public function setContextMode(ContextMode $contextMode): static
+    {
+        $this->contextMode = $contextMode;
 
         return $this;
     }

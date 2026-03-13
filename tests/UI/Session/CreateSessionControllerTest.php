@@ -107,4 +107,59 @@ final class CreateSessionControllerTest extends DbWebTestCase
         // Devrait être refusé (403)
         self::assertResponseStatusCodeSame(403);
     }
+
+    public function testPreferredActivityFromQueryIsPreselected(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $owner = new User();
+        $owner->setEmail('owner-preselect@test.local');
+        $owner->setPassword('hashed_password');
+        $owner->setCreatedAt(new \DateTimeImmutable());
+        $owner->setIsVerified(true);
+
+        $em->persist($owner);
+        $em->flush();
+
+        $group = new GameGroup();
+        $group->setName('Test Group Preselect');
+        $group->setCreatedAt(new \DateTimeImmutable());
+        $group->setCreatedBy($owner);
+
+        $em->persist($group);
+        $em->flush();
+
+        $membership = new GroupMember(GroupRole::OWNER);
+        $membership->setUser($owner);
+        $membership->setGroup($group);
+
+        $activityA = new Activity();
+        $activityA->setName('Rocket League');
+        $activityA->setGroup($group);
+        $activityA->setCreatedBy($owner);
+
+        $activityB = new Activity();
+        $activityB->setName('Mario Kart');
+        $activityB->setGroup($group);
+        $activityB->setCreatedBy($owner);
+
+        $em->persist($membership);
+        $em->persist($activityA);
+        $em->persist($activityB);
+        $em->flush();
+
+        $groupId = $group->getId();
+        $activityBId = $activityB->getId();
+        $ownerId = $owner->getId();
+        $em->clear();
+
+        $owner = $em->find(User::class, $ownerId);
+
+        $client->loginUser($owner);
+        $crawler = $client->request('GET', sprintf('/groups/%d/sessions/create?activity=%d', $groupId, $activityBId));
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter(sprintf('option[value="%d"][selected]', $activityBId))->count());
+    }
 }

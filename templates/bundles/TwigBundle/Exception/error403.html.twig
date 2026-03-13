@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accès refusé{% endblock %}
+
+{% block body %}
+<section class="error-page">
+    <div class="error-card">
+        <div class="error-code">403</div>
+        <h1 class="error-title">Accès refusé</h1>
+        <p class="error-message">
+            Vous n'avez pas les permissions nécessaires pour accéder à cette ressource.
+        </p>
+        <p class="error-description">
+            {% if app.user %}
+                Connecté en tant que <strong>{{ app.user.userIdentifier }}</strong>. 
+                Si vous pensez avoir accès à cette page, <a href="{{ path('app_home') }}">retournez à l'accueil</a> ou <a href="{{ logout_path() }}">déconnectez-vous</a>.
+            {% else %}
+                Vous devez être connecté pour accéder à cette ressource. 
+                <a href="{{ path('app_login') }}">Connexion</a>
+            {% endif %}
+        </p>
+
+        <nav class="error-nav">
+            <a href="{{ path('app_home') }}" class="btn btn-secondary">Retour à l'accueil</a>
+            {% if not app.user %}
+                <a href="{{ path('app_login') }}" class="btn btn-primary">Se connecter</a>
+            {% endif %}
+        </nav>
+
+        <p class="error-hint">Vous pouvez aussi consulter vos <a href="{{ path('dashboard') }}">groupes et sessions</a> si vous êtes connecté.</p>
+    </div>
+</section>
+{% endblock %}

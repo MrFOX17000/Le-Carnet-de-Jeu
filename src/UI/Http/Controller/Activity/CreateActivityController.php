@@ -4,6 +4,7 @@ namespace App\UI\Http\Controller\Activity;
 
 use App\Application\Activity\CreateActivity\CreateActivityCommand;
 use App\Application\Activity\CreateActivity\CreateActivityHandler;
+use App\Domain\Activity\ContextMode;
 use App\Entity\GameGroup;
 use App\Entity\User;
 use App\Security\Voter\GroupVoter;
@@ -35,21 +36,25 @@ final class CreateActivityController extends AbstractController
             $name = $request->request->getString('name');
 
             if ($name === '') {
-                $this->addFlash('error', 'Activity name is required.');
+                $this->addFlash('error', 'Le nom de l\'activité est obligatoire.');
                 return $this->redirectToRoute('activity_create', ['id' => $group->getId()]);
             }
 
             try {
+                $contextModeValue = $request->request->getString('contextMode', ContextMode::RANKING->value);
+                $contextMode = ContextMode::tryFrom($contextModeValue) ?? ContextMode::RANKING;
+
                 $command = new CreateActivityCommand(
                     groupId: $group->getId(),
                     name: $name,
                     creatorUserId: $user->getId(),
+                    contextMode: $contextMode,
                 );
 
                 $result = $this->handler->handle($command);
 
                 $this->addFlash('success', sprintf(
-                    'Activity "%s" created successfully.',
+                    'L\'activité "%s" a été créée avec succès.',
                     $name
                 ));
 

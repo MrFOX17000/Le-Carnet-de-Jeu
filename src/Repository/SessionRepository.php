@@ -17,6 +17,27 @@ class SessionRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Session[]
+     */
+    public function findByActivityWithEntries(int $activityId): array
+    {
+        return $this->createQueryBuilder('s')
+            ->addSelect('a', 'e', 'scores', 'match')
+            ->innerJoin('s.activity', 'a')
+            ->leftJoin('s.entries', 'e')
+            ->leftJoin('e.scores', 'scores')
+            ->leftJoin('e.entryMatch', 'match')
+            ->andWhere('a.id = :activityId')
+            ->setParameter('activityId', $activityId)
+            ->orderBy('s.playedAt', 'DESC')
+            ->addOrderBy('s.createdAt', 'DESC')
+            ->addOrderBy('e.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    /**
      * @param int[] $groupIds
      * @return Session[] Returns the most recent sessions from given groups
      */
@@ -28,6 +49,32 @@ class SessionRepository extends ServiceEntityRepository
             ->orderBy('s.playedAt', 'DESC')
             ->addOrderBy('s.createdAt', 'DESC')
             ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    /**
+     * @param int[] $groupIds
+     * @return Session[]
+     */
+    public function findByGroupIdsWithEntries(array $groupIds): array
+    {
+        if ([] === $groupIds) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('s')
+            ->addSelect('g', 'a', 'e', 'scores', 'match')
+            ->innerJoin('s.group', 'g')
+            ->innerJoin('s.activity', 'a')
+            ->leftJoin('s.entries', 'e')
+            ->leftJoin('e.scores', 'scores')
+            ->leftJoin('e.entryMatch', 'match')
+            ->andWhere('s.group IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds)
+            ->orderBy('s.playedAt', 'DESC')
+            ->addOrderBy('s.createdAt', 'DESC')
             ->getQuery()
             ->getResult()
         ;
@@ -55,7 +102,7 @@ class SessionRepository extends ServiceEntityRepository
 
     /**
      * @param int[] $groupIds
-     * @return array{activityId:int, activityName:string, sessionsCount:int, lastPlayedAt:\DateTimeImmutable}|null
+     * @return array{activityId:int, activityName:string, groupId:int, sessionsCount:int, lastPlayedAt:\DateTimeImmutable}|null
      */
     public function findMostPlayedActivityByGroupIds(array $groupIds): ?array
     {
@@ -66,12 +113,14 @@ class SessionRepository extends ServiceEntityRepository
         $row = $this->createQueryBuilder('s')
             ->select('a.id AS activityId')
             ->addSelect('a.name AS activityName')
+            ->addSelect('g.id AS groupId')
             ->addSelect('COUNT(s.id) AS sessionsCount')
             ->addSelect('MAX(s.playedAt) AS lastPlayedAt')
             ->innerJoin('s.activity', 'a')
+            ->innerJoin('s.group', 'g')
             ->andWhere('s.group IN (:groupIds)')
             ->setParameter('groupIds', $groupIds)
-            ->groupBy('a.id, a.name')
+            ->groupBy('a.id, a.name, g.id')
             ->orderBy('sessionsCount', 'DESC')
             ->addOrderBy('lastPlayedAt', 'DESC')
             ->setMaxResults(1)
@@ -86,6 +135,7 @@ class SessionRepository extends ServiceEntityRepository
         return [
             'activityId' => (int) $row['activityId'],
             'activityName' => (string) $row['activityName'],
+            'groupId' => (int) $row['groupId'],
             'sessionsCount' => (int) $row['sessionsCount'],
             'lastPlayedAt' => $row['lastPlayedAt'],
         ];

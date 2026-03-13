@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}Carnet de Jeu{% endblock %}</title>
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/brand/icon-carnet-de-jeu.png') }}">
         <link rel="icon" type="image/webp" href="{{ asset('images/brand/icon-carnet-de-jeu.webp') }}">
         <link rel="apple-touch-icon" href="{{ asset('images/brand/icon-carnet-de-jeu.png') }}">
@@ -14,25 +14,31 @@
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
-    <body class="{% block body_class %}{% endblock %}">
+    <body class="theme-classic">
         <header class="site-header">
             <div class="site-header-inner">
                 <a class="brand" href="{{ path('app_home') }}" aria-label="Accueil Carnet de Jeu">
                     <picture>
-                        <source srcset="{{ asset('images/brand/logo-carnet-de-jeu.webp') }}" type="image/webp">
-                        <source srcset="{{ asset('images/brand/logo-carnet-de-jeu.png') }}" type="image/png">
-                        <img class="brand-logo" src="{{ asset('images/brand/logo-carnet-de-jeu.svg') }}" alt="Logo Carnet de Jeu">
+                        <source srcset="{{ asset('images/brand/icon-carnet-de-jeu.webp') }}" type="image/webp">
+                        <img class="brand-logo" src="{{ asset('images/brand/icon-carnet-de-jeu.png') }}" alt="Icone Carnet de Jeu">
                     </picture>
                     <span>Carnet de Jeu</span>
                 </a>
                 <nav class="site-nav" aria-label="Navigation principale">
-                    <a href="{{ path('app_home') }}">Accueil</a>
                     {% if app.user %}
-                        <a href="{{ path('dashboard') }}">Dashboard</a>
-                        <a href="{{ path('group_index') }}">Groupes</a>
-                        <a href="{{ path('group_create_form') }}">Nouveau groupe</a>
-                        <a href="{{ path('app_logout') }}">Deconnexion</a>
+                        <div class="site-nav-main">
+                            <a href="{{ path('app_home') }}">Accueil</a>
+                            <a href="{{ path('dashboard') }}">Dashboard</a>
+                            <a href="{{ path('group_index') }}">Groupes</a>
+                            <a href="{{ path('my_profile') }}">Profil</a>
+                        </div>
+                        <div class="site-nav-user">
+                            <a class="btn btn-secondary btn-sm" href="{{ path('group_create_form') }}">Nouveau groupe</a>
+                            <span class="user-chip">{{ app.user.displayName ?: app.user.email }}</span>
+                            <a href="{{ path('app_logout') }}">Déconnexion</a>
+                        </div>
                     {% else %}
+                        <a href="{{ path('app_home') }}">Accueil</a>
                         <a href="{{ path('app_login') }}">Connexion</a>
                         <a href="{{ path('app_register') }}">Inscription</a>
                     {% endif %}
@@ -56,12 +62,13 @@
 
         <footer class="site-footer">
             <div class="site-footer-inner">
-                <p>© {{ "now"|date("Y") }} Carnet de Jeu. Suivi de sessions gaming en groupe.</p>
+                <p>© {{ "now"|date("Y") }} Carnet de Jeu. Suivi de sessions en groupe.</p>
                 <nav class="site-footer-nav" aria-label="Liens de pied de page">
                     <a href="{{ path('app_home') }}">Accueil</a>
                     {% if app.user %}
                         <a href="{{ path('dashboard') }}">Dashboard</a>
                         <a href="{{ path('group_index') }}">Groupes</a>
+                        <a href="{{ path('my_profile') }}">Profil</a>
                     {% else %}
                         <a href="{{ path('app_login') }}">Connexion</a>
                         <a href="{{ path('app_register') }}">Inscription</a>

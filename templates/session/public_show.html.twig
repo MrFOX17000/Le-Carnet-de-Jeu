@@ -3,63 +3,87 @@
 {% block title %}Partage - Session{% endblock %}
 
 {% block body %}
-  <div class="public-shared-session">
-    <h1>
-      {% if session.title %}
-        {{ session.title }}
+  <section class="public-session-page">
+    <header class="public-session-header">
+      <p class="public-session-kicker">Session partagée</p>
+      <h1>
+        {% if session.title %}
+          {{ session.title }}
+        {% else %}
+          Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
+        {% endif %}
+      </h1>
+      <p class="public-session-note">Lecture seule : session partagée en accès direct</p>
+    </header>
+
+    <div class="public-session-meta-grid">
+      <article class="public-meta-card">
+        <p class="meta-label">Activité</p>
+        <p class="meta-value">{{ session.activity.name }}</p>
+      </article>
+      <article class="public-meta-card">
+        <p class="meta-label">Date jouée</p>
+        <p class="meta-value">{{ session.playedAt|date('d/m/Y H:i') }}</p>
+      </article>
+      <article class="public-meta-card">
+        <p class="meta-label">Créée le</p>
+        <p class="meta-value">{{ session.createdAt|date('d/m/Y H:i') }}</p>
+      </article>
+      <article class="public-meta-card">
+        <p class="meta-label">Créée par</p>
+        <p class="meta-value">{{ session.createdBy.email }}</p>
+      </article>
+    </div>
+
+    <section>
+      <h2>Entrées</h2>
+      {% if session.entries|length == 0 %}
+        <div class="public-empty-state">
+          <p>Aucune entrée pour cette session.</p>
+        </div>
       {% else %}
-        Session {{ session.activity.name }} du {{ session.playedAt|date('d/m/Y') }}
-      {% endif %}
-    </h1>
+        <div class="public-entries-grid">
+          {% for entry in session.entries %}
+            <article class="public-entry-card">
+              <div class="public-entry-head">
+                <p class="public-entry-type">{{ entry.type.value == 'match' ? 'Match' : 'Score simple' }}</p>
+                <p class="public-entry-date">{{ entry.createdAt|date('d/m/Y H:i') }}</p>
+              </div>
 
-    <dl>
-      <dt>Activité</dt>
-      <dd>{{ session.activity.name }}</dd>
-
-      <dt>Date jouée</dt>
-      <dd>{{ session.playedAt|date('d/m/Y H:i') }}</dd>
-
-      <dt>Créée le</dt>
-      <dd>{{ session.createdAt|date('d/m/Y H:i') }}</dd>
-
-      <dt>Créée par</dt>
-      <dd>{{ session.createdBy.email }}</dd>
-    </dl>
-
-    <h2>Entrées</h2>
-
-    {% if session.entries|length == 0 %}
-      <p>Aucune entry pour cette session.</p>
-    {% else %}
-      <ul>
-        {% for entry in session.entries %}
-          <li>
-            <p>
-              <strong>{{ entry.type.value }}</strong>
               {% if entry.label %}
-                - {{ entry.label }}
+                <h3>{{ entry.label }}</h3>
               {% endif %}
-              ({{ entry.createdAt|date('d/m/Y H:i') }})
-            </p>
 
-            {% if entry.type.value == 'match' and entry.entryMatch %}
-              <p>
-                {{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}
-              </p>
-            {% elseif entry.scores|length > 0 %}
-              <ul>
-                {% for score in entry.scores %}
-                  <li>{{ score.participantName }}: {{ score.score }}</li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
-    <p class="text-muted">
-      <small>Lecture seule - Session partagée en accès direct</small>
-    </p>
-  </div>
+              {% if entry.type.value == 'match' and entry.entryMatch %}
+                {% set homeWon = entry.entryMatch.homeScore > entry.entryMatch.awayScore %}
+                {% set awayWon = entry.entryMatch.awayScore > entry.entryMatch.homeScore %}
+                <div class="public-match-board">
+                  <div class="public-match-side {{ homeWon ? 'winner' : '' }}">
+                    <p>{{ entry.entryMatch.homeName }}</p>
+                    <strong>{{ entry.entryMatch.homeScore }}</strong>
+                  </div>
+                  <span>-</span>
+                  <div class="public-match-side {{ awayWon ? 'winner' : '' }}">
+                    <p>{{ entry.entryMatch.awayName }}</p>
+                    <strong>{{ entry.entryMatch.awayScore }}</strong>
+                  </div>
+                </div>
+                <p class="sr-only">{{ entry.entryMatch.homeName }} {{ entry.entryMatch.homeScore }} - {{ entry.entryMatch.awayScore }} {{ entry.entryMatch.awayName }}</p>
+              {% elseif entry.scores|length > 0 %}
+                <ul class="public-score-list">
+                  {% for score in entry.scores %}
+                    <li>
+                      <span>{{ score.participantName }}</span>
+                      <strong>{{ score.score }}</strong>
+                      <span class="sr-only">{{ score.participantName }}: {{ score.score }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+  </section>
 {% endblock %}

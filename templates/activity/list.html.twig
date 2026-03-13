@@ -3,32 +3,84 @@
 {% block title %}Activités - {{ group.name }}{% endblock %}
 
 {% block body %}
-  <h1>Activités du groupe "{{ group.name }}"</h1>
+  <section class="activity-page">
+    <header class="activity-header">
+      <div>
+        <p class="activity-kicker">Catalogue du groupe</p>
+        <h1>Activités de {{ group.name }}</h1>
+        <p class="activity-subtitle">Gère les jeux et activités disponibles pour créer rapidement tes prochaines sessions.</p>
+        {% if is_granted(constant('App\\Security\\Voter\\GroupVoter::MANAGE'), group) %}
+          <div class="session-flow-help" role="note" aria-label="Suite du parcours">
+            <p><strong>Suite logique :</strong> choisis une activité, puis lance une session déjà préremplie depuis sa carte.</p>
+          </div>
+        {% endif %}
+      </div>
+      <div class="activity-header-actions">
+        {% if is_granted(constant('App\\Security\\Voter\\GroupVoter::MANAGE'), group) %}
+          <a class="btn btn-primary" href="{{ path('activity_create', { id: group.id }) }}">Créer une activité</a>
+        {% endif %}
+        <a class="btn btn-secondary" href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
+      </div>
+    </header>
 
-  {% for message in app.flashes('success') %}
-    <div class="alert alert-success">
-      {{ message }}
-    </div>
-  {% endfor %}
+    {% for message in app.flashes('success') %}
+      <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
 
-  {% if activities|length > 0 %}
-    <ul>
-      {% for activity in activities %}
-        <li>
-          <strong>{{ activity.name }}</strong>
-          <small>(créée le {{ activity.createdAt|date('d/m/Y H:i') }})</small>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Aucune activité pour le moment.</p>
-  {% endif %}
+    {% for message in app.flashes('error') %}
+      <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
 
-  <p>
-    <a href="{{ path('activity_create', { id: group.id }) }}">+ Créer une activité</a>
-  </p>
-
-  <p>
-    <a href="{{ path('group_show', { id: group.id }) }}">Retour au groupe</a>
-  </p>
+    {% if activities|length > 0 %}
+      <div class="activity-grid">
+        {% for activity in activities %}
+          {% set activityMeta = activity_meta(activity.name, activity.contextMode.value) %}
+          <article class="activity-card">
+            <div class="activity-card-head">
+              <h2>
+                <a href="{{ path('activity_show', { groupId: group.id, activityId: activity.id }) }}" class="activity-card-title-link">
+                  <span class="activity-mini-badge" style="--activity-accent: {{ activityMeta.accent }}; --activity-background: {{ activityMeta.background }}; --activity-foreground: {{ activityMeta.foreground }};">
+                    {% if activityMeta.iconUrl %}
+                      <img src="{{ activityMeta.iconUrl }}" alt="{{ activityMeta.iconAlt }}" loading="lazy">
+                    {% else %}
+                      <span>{{ activityMeta.shortLabel }}</span>
+                    {% endif %}
+                    {{ activity.name }}
+                  </span>
+                </a>
+              </h2>
+              {% if is_granted(constant('App\\Security\\Voter\\GroupVoter::MANAGE'), group) %}
+                <div class="activity-card-actions">
+                  <a class="btn btn-secondary btn-sm" href="{{ path('activity_edit', { groupId: group.id, activityId: activity.id }) }}">Modifier</a>
+                  <form method="post" action="{{ path('activity_delete', { groupId: group.id, activityId: activity.id }) }}" onsubmit="return confirm('Supprimer cette activité ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-activity-' ~ activity.id) }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
+            {% set modeLabel = {
+              'ranking':           'Classement libre',
+              'duel':              'Duel 1v1',
+              'duel_equipe':       'Match d\'équipes',
+              'groupe_vs_externe': 'Groupe vs Extérieur'
+            } %}
+            <p class="activity-mode-badge">{{ modeLabel[activity.contextMode.value] ?? activity.contextMode.value }}</p>
+            <p class="text-muted">Créée le {{ activity.createdAt|date('d/m/Y') }} · {{ activity.sessions|length }} session{{ activity.sessions|length > 1 ? 's' : '' }}</p>
+            <a class="btn btn-secondary btn-sm" href="{{ path('activity_show', { groupId: group.id, activityId: activity.id }) }}">Voir le tracker</a>
+            {% if is_granted(constant('App\\Security\\Voter\\GroupVoter::MANAGE'), group) %}
+              <a class="btn btn-primary btn-sm" href="{{ path('session_create', { id: group.id, activity: activity.id }) }}">Créer une session</a>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="activity-empty">
+        <p>Aucune activité pour le moment.</p>
+        {% if is_granted(constant('App\\Security\\Voter\\GroupVoter::MANAGE'), group) %}
+          <a class="btn btn-secondary" href="{{ path('activity_create', { id: group.id }) }}">Créer la première activité</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
 {% endblock %}

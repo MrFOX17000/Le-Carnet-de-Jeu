@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Exemple concret - Carnet de Jeu{% endblock %}
+
+{% block body %}
+<section class="demo-showcase-page">
+  <header class="demo-header">
+    <p class="demo-kicker">Exemple public</p>
+    <h1>Voici ce que vous pouvez obtenir avec Carnet de Jeu</h1>
+    <p class="demo-subtitle">Ce scénario est fictif et sert uniquement à montrer le rendu final sans connexion.</p>
+    <p class="demo-note">Mode démonstration : aucune action n'est enregistrée et aucun compte n'est nécessaire pour parcourir cet exemple.</p>
+  </header>
+
+  <section class="demo-block">
+    <h2>1) Tableau de bord synthétique</h2>
+    <div class="demo-stats-grid">
+      <article class="demo-stat-card">
+        <p>Groupes actifs</p>
+        <strong>3</strong>
+      </article>
+      <article class="demo-stat-card">
+        <p>Sessions ce mois-ci</p>
+        <strong>12</strong>
+      </article>
+      <article class="demo-stat-card">
+        <p>Invitations en attente</p>
+        <strong>2</strong>
+      </article>
+      <article class="demo-stat-card">
+        <p>Taux de participation</p>
+        <strong>89%</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="demo-block">
+    <h2>2) Exemple de groupe</h2>
+    <article class="demo-group-card">
+      <div>
+        <h3>Soirée jeux du vendredi</h3>
+        <p>8 membres • 24 sessions • 5 activités</p>
+      </div>
+      <span class="demo-badge">Propriétaire</span>
+    </article>
+  </section>
+
+  <section class="demo-block">
+    <h2>3) Exemple de session et résultats</h2>
+    <article class="demo-session-card">
+      <p class="demo-session-meta">Activité: Skyjo • Jouée le 07/03/2026 à 20:30</p>
+      <h3>Session Skyjo #14</h3>
+      <div class="demo-score-list">
+        <div><span>Alice</span><strong>12 pts</strong></div>
+        <div><span>Mehdi</span><strong>18 pts</strong></div>
+        <div><span>Camille</span><strong>22 pts</strong></div>
+      </div>
+      <p class="demo-note">Exemple de score simple : plus le score est bas, meilleur est le classement.</p>
+    </article>
+
+    <article class="demo-session-card">
+      <p class="demo-session-meta">Activité: Football • Jouée le 05/03/2026 à 21:00</p>
+      <h3>Match principal</h3>
+      <div class="demo-match-board">
+        <div class="demo-match-side winner">
+          <p>Team Nord</p>
+          <strong>3</strong>
+        </div>
+        <span>-</span>
+        <div class="demo-match-side">
+          <p>Team Sud</p>
+          <strong>1</strong>
+        </div>
+      </div>
+      <p class="demo-note">Exemple de match : le gagnant est mis en avant automatiquement.</p>
+    </article>
+  </section>
+
+  <section class="demo-block">
+    <h2>4) Exemple de partage public</h2>
+    <p>Un lien en lecture seule peut être envoyé à des invités : ils consultent les résultats sans pouvoir modifier vos données.</p>
+  </section>
+
+  <div class="demo-actions">
+    <a class="btn btn-primary" href="{{ path('app_register') }}">Créer mon compte</a>
+    <a class="btn btn-secondary" href="{{ path('app_home') }}">Retour à l'accueil</a>
+  </div>
+</section>
+{% endblock %}

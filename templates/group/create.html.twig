@@ -1,20 +1,27 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Creer un groupe{% endblock %}
+{% block title %}Créer un groupe{% endblock %}
 
 {% block body %}
-<section class="panel narrow">
-  <h1>Creer un groupe</h1>
+<section class="group-create-page">
+  <div class="group-create-card">
+    <p class="group-create-kicker">Nouveau groupe</p>
+    <h1>Créer un groupe</h1>
+    <p class="group-create-subtitle">Donne une identité claire à ton groupe pour y rattacher sessions, activités et membres.</p>
 
-  {% if error is defined and error %}
-    <div class="flash flash-error">{{ error }}</div>
-  {% endif %}
+    {% if error is defined and error %}
+      <div class="flash flash-error">{{ error }}</div>
+    {% endif %}
 
-  <form method="post">
-    <label for="name">Nom du groupe</label>
-    <input id="name" name="name" required maxlength="120" value="{{ name|default('') }}" placeholder="Ex: Soiree jeux du vendredi">
+    <form method="post" class="group-create-form">
+      <label for="name">Nom du groupe</label>
+      <input id="name" name="name" required maxlength="120" value="{{ name|default('') }}" placeholder="Ex: Soirée jeux du vendredi">
 
-    <button type="submit" class="btn btn-primary">Creer</button>
-  </form>
+      <div class="group-create-actions">
+        <button type="submit" class="btn btn-primary">Créer</button>
+        <a class="btn btn-secondary" href="{{ path('group_index') }}">Annuler</a>
+      </div>
+    </form>
+  </div>
 </section>
 {% endblock %}

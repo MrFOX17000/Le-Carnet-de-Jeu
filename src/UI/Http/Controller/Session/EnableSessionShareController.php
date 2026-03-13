@@ -65,7 +65,7 @@ final class EnableSessionShareController extends AbstractController
 
             $result = $this->handler->handle($command);
 
-            $this->addFlash('success', 'Session sharing enabled! Link copied to clipboard.');
+            $this->addFlash('success', 'Partage activé ! Copiez le lien ci-dessous pour le partager.');
 
             // Rediriger vers le détail de la session
             return $this->redirectToRoute('session_show', [

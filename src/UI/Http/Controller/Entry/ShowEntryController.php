@@ -29,10 +29,13 @@ class ShowEntryController extends AbstractController
 
         $this->denyAccessUnlessGranted(GroupVoter::VIEW, $entry->getGroup());
 
+        $canManage = $this->isGranted(GroupVoter::MANAGE, $entry->getGroup());
+
         return $this->render('entry/show.html.twig', [
-            'entry' => $entry,
-            'group' => $entry->getGroup(),
-            'session' => $entry->getSession(),
+            'entry'     => $entry,
+            'group'     => $entry->getGroup(),
+            'session'   => $entry->getSession(),
+            'canManage' => $canManage,
         ]);
     }
 }
