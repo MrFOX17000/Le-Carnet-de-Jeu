@@ -46,10 +46,11 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-          - { path: ^/login, roles: PUBLIC_ACCESS }
-          - { path: ^/register, roles: PUBLIC_ACCESS }
-          - { path: ^/connect/google, roles: PUBLIC_ACCESS }
-          - { path: ^/dashboard, roles: ROLE_USER }
+        - { path: ^/csp-report, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/connect/google, roles: PUBLIC_ACCESS }
+        - { path: ^/dashboard, roles: ROLE_USER }
 
 when@test:
     security:

@@ -58,7 +58,7 @@ symfony server:start
    - **Match** : équipe domicile vs extérieur avec liaison optionnelle aux membres  
 ✅ **Partage public** : Générez un lien sécurisé avec token pour partager une session en lecture seule  
 ✅ **API JSON v1** : Endpoints REST documentés (`/api/groups`, `/api/sessions`, etc.)  
-✅ **Tests automatisés** : 144 tests PHPUnit (552 assertions)
+✅ **Tests automatisés** : 145 tests PHPUnit (557 assertions)
 
 ---
 
@@ -135,6 +135,7 @@ Toutes les erreurs retournent un JSON standardisé :
 
 - ✅ Vérification des droits via `Voter` Symfony
 - ✅ Validation stricte des ressources cross-group (anti resource forgery)
+- ✅ Headers HTTP de sécurité + CSP en mode report-only (`/csp-report`)
 - ✅ Un utilisateur **ne peut pas** :
   - Lire un groupe dont il n'est pas membre
   - Gérer des ressources sans être `OWNER`
@@ -149,7 +150,7 @@ Toutes les erreurs retournent un JSON standardisé :
 php bin/phpunit
 ```
 
-**Couverture actuelle** : 144 tests | 552 assertions  
+**Couverture actuelle** : 145 tests | 557 assertions  
 - Tests fonctionnels (DbWebTestCase)
 - Tests de contrôleurs web
 - Tests API JSON
