@@ -1,4 +1,6 @@
 {
+    "name": "mrfox17000/le-carnet-de-jeu",
+    "description": "Application Symfony pour gérer des groupes de jeu, sessions et statistiques.",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
@@ -34,7 +36,7 @@
         "symfony/process": "8.0.*",
         "symfony/property-access": "8.0.*",
         "symfony/property-info": "8.0.*",
-        "symfony/rate-limiter": "8.0",
+        "symfony/rate-limiter": "8.0.*",
         "symfony/runtime": "8.0.*",
         "symfony/security-bundle": "8.0.*",
         "symfony/serializer": "8.0.*",
