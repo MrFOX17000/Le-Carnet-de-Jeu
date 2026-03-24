@@ -23,5 +23,6 @@ final class SecurityHeadersTest extends WebTestCase
         self::assertNotNull($cspReportOnly);
         self::assertStringContainsString("default-src 'self'", $cspReportOnly);
         self::assertStringContainsString('report-uri /csp-report', $cspReportOnly);
+        self::assertNull($headers->get('Content-Security-Policy'));
     }
 }

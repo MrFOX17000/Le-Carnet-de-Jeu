@@ -2,7 +2,7 @@
 
 ![Symfony](https://img.shields.io/badge/Symfony-7-black)
 ![PHP](https://img.shields.io/badge/PHP-8.5-blue)
-![Tests](https://img.shields.io/badge/Tests-144%20passed-green)
+![Tests](https://img.shields.io/badge/Tests-146%20passed-green)
 ![CI](https://github.com/MrFOX17000/Le-Carnet-de-Jeu/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
@@ -58,7 +58,7 @@ symfony server:start
    - **Match** : équipe domicile vs extérieur avec liaison optionnelle aux membres  
 ✅ **Partage public** : Générez un lien sécurisé avec token pour partager une session en lecture seule  
 ✅ **API JSON v1** : Endpoints REST documentés (`/api/groups`, `/api/sessions`, etc.)  
-✅ **Tests automatisés** : 145 tests PHPUnit (557 assertions)
+✅ **Tests automatisés** : 146 tests PHPUnit (561 assertions)
 
 ---
 
@@ -135,7 +135,7 @@ Toutes les erreurs retournent un JSON standardisé :
 
 - ✅ Vérification des droits via `Voter` Symfony
 - ✅ Validation stricte des ressources cross-group (anti resource forgery)
-- ✅ Headers HTTP de sécurité + CSP en mode report-only (`/csp-report`)
+- ✅ Headers HTTP de sécurité + CSP progressive par environnement (`report-only` en dev/test, `enforce + report-only` en prod)
 - ✅ Un utilisateur **ne peut pas** :
   - Lire un groupe dont il n'est pas membre
   - Gérer des ressources sans être `OWNER`
@@ -150,7 +150,7 @@ Toutes les erreurs retournent un JSON standardisé :
 php bin/phpunit
 ```
 
-**Couverture actuelle** : 145 tests | 557 assertions  
+**Couverture actuelle** : 146 tests | 561 assertions  
 - Tests fonctionnels (DbWebTestCase)
 - Tests de contrôleurs web
 - Tests API JSON
