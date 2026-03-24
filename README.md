@@ -2,7 +2,7 @@
 
 ![Symfony](https://img.shields.io/badge/Symfony-7-black)
 ![PHP](https://img.shields.io/badge/PHP-8.5-blue)
-![Tests](https://img.shields.io/badge/Tests-143%20passed-green)
+![Tests](https://img.shields.io/badge/Tests-144%20passed-green)
 ![CI](https://github.com/MrFOX17000/Le-Carnet-de-Jeu/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
@@ -58,7 +58,7 @@ symfony server:start
    - **Match** : équipe domicile vs extérieur avec liaison optionnelle aux membres  
 ✅ **Partage public** : Générez un lien sécurisé avec token pour partager une session en lecture seule  
 ✅ **API JSON v1** : Endpoints REST documentés (`/api/groups`, `/api/sessions`, etc.)  
-✅ **Tests automatisés** : 143 tests PHPUnit (547 assertions)
+✅ **Tests automatisés** : 144 tests PHPUnit (552 assertions)
 
 ---
 
@@ -149,7 +149,7 @@ Toutes les erreurs retournent un JSON standardisé :
 php bin/phpunit
 ```
 
-**Couverture actuelle** : 143 tests | 547 assertions  
+**Couverture actuelle** : 144 tests | 552 assertions  
 - Tests fonctionnels (DbWebTestCase)
 - Tests de contrôleurs web
 - Tests API JSON
