@@ -61,6 +61,7 @@ final class JsonErrorResponse
         
         // Generic
         'invalid_request' => 'The request contains invalid data.',
+        'too_many_requests' => 'Too many requests. Please try again later.',
         'internal_error' => 'An internal error occurred. Please try again later.',
     ];
 

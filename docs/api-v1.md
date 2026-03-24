@@ -29,6 +29,7 @@ Chaque endpoint vérifie l'appartenance au groupe. Un utilisateur ne peut jamais
 - **403** Forbidden - Utilisateur authentifié mais sans droits suffisants
 - **404** Not Found - Ressource inexistante
 - **422** Unprocessable Entity - Validation métier échouée
+- **429** Too Many Requests - Trop de requêtes d'écriture API dans une courte fenêtre
 
 ### Format de réponse
 
@@ -58,6 +59,10 @@ Chaque endpoint vérifie l'appartenance au groupe. Un utilisateur ne peut jamais
   }
 }
 ```
+
+Pour les endpoints d'écriture API (`POST`, `PUT`, `PATCH`, `DELETE` sous `/api/*`), un rate limiting est appliqué. En cas de dépassement, l'API retourne :
+- `429` avec `error.code = "too_many_requests"`
+- un header `Retry-After` indiquant le nombre de secondes avant un nouvel essai
 
 ---
 
